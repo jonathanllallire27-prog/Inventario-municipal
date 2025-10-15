@@ -1,0 +1,332 @@
+import 'package:flutter/material.dart';
+import '../models/equipo.dart';
+
+class DetalleEquipoScreen extends StatelessWidget {
+  final Equipo equipo;
+  final bool isAdmin;
+
+  const DetalleEquipoScreen({
+    required this.equipo,
+    required this.isAdmin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: Text('Detalles del Equipo'),
+        backgroundColor: Color(0xFF0D47A1),
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header con información principal
+            _buildHeaderCard(),
+            SizedBox(height: 20),
+
+            // Especificaciones Técnicas
+            _buildSpecsCard(),
+            SizedBox(height: 20),
+
+            // Configuración y Periféricos
+            _buildPeripheralsCard(),
+            SizedBox(height: 20),
+
+            // Información Adicional
+            _buildAdditionalInfoCard(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF0D47A1).withOpacity(0.3),
+            blurRadius: 15,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${equipo.tipo} - ${equipo.oficina}',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'N° ${equipo.numero}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _getEstadoColor(equipo.estado).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: _getEstadoColor(equipo.estado)),
+                ),
+                child: Text(
+                  equipo.estado,
+                  style: TextStyle(
+                    color: _getEstadoColor(equipo.estado),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Divider(color: Colors.white30, height: 1),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              _buildHeaderItem(Icons.business_outlined, equipo.sede, 'Sede'),
+              SizedBox(width: 20),
+              _buildHeaderItem(Icons.language_outlined,
+                  equipo.ip.isEmpty ? 'Sin IP' : equipo.ip, 'IP'),
+              SizedBox(width: 20),
+              _buildHeaderItem(
+                  Icons.scanner_outlined, equipo.escaner, 'Escáner'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderItem(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white70, size: 20),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpecsCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.memory_outlined, color: Color(0xFF0D47A1), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Especificaciones Técnicas',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0D47A1),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          _buildSpecItem('🧠 Procesador', equipo.microprocesador),
+          _buildSpecItem('💻 Sistema Operativo', equipo.sistemaOperativo),
+          _buildSpecItem('🏷️ Marca', equipo.marca),
+          _buildSpecItem('📊 Memoria RAM', equipo.memoriaRAM),
+          _buildSpecItem('💾 Disco Duro', equipo.discoDuro),
+          _buildSpecItem('🖥️ Monitor', equipo.monitor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeripheralsCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.print_outlined, color: Color(0xFF0D47A1), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Periféricos y Red',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0D47A1),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          _buildSpecItem(
+              '🖨️ Impresoras',
+              equipo.impresoras.isEmpty
+                  ? 'No especificado'
+                  : equipo.impresoras),
+          _buildSpecItem('📡 Escáner', equipo.escaner),
+          _buildSpecItem(
+              '🌐 Dirección IP', equipo.ip.isEmpty ? 'No asignada' : equipo.ip),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalInfoCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Color(0xFF0D47A1), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Información Adicional',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0D47A1),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          _buildSpecItem('🏢 Oficina', equipo.oficina),
+          _buildSpecItem('📍 Sede', equipo.sede),
+          _buildSpecItem('🔧 Tipo', equipo.tipo),
+          _buildSpecItem('📋 Número', equipo.numero),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpecItem(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+                fontSize: 14,
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getEstadoColor(String estado) {
+    switch (estado) {
+      case 'BUENO':
+        return Colors.green;
+      case 'REGULAR':
+        return Colors.orange;
+      case 'MALO':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+}
