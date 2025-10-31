@@ -5,9 +5,10 @@ import '../providers/inventario_provider.dart';
 class AgregarEquipoScreen extends StatefulWidget {
   final Equipo? equipo;
 
-  const AgregarEquipoScreen({this.equipo});
+  const AgregarEquipoScreen({super.key, this.equipo});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AgregarEquipoScreenState createState() => _AgregarEquipoScreenState();
 }
 
@@ -127,7 +128,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
     if (widget.equipo == null) {
       _inventarioProvider.agregarEquipo(equipo);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('✅ Equipo agregado exitosamente'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
@@ -136,7 +137,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
     } else {
       _inventarioProvider.editarEquipo(equipo.id, equipo);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('✅ Equipo actualizado exitosamente'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
@@ -150,24 +151,24 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
           widget.equipo == null ? '➕ Agregar Equipo' : '✏️ Editar Equipo',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: Color(0xFF0D47A1),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.save_outlined),
+            icon: const Icon(Icons.save_outlined),
             onPressed: _guardarEquipo,
             tooltip: 'Guardar',
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
@@ -176,7 +177,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
               _buildSectionHeader('📋 Información Básica'),
               _buildTextField(_numeroController, 'Número',
                   Icons.confirmation_number_outlined),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildDropdownField(
                 value: _oficinaController.text.isEmpty
                     ? null
@@ -186,7 +187,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                 items: _oficinas,
                 onChanged: (value) => _oficinaController.text = value!,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildDropdownField(
                 value: _tipoSeleccionado,
                 label: 'Tipo de Equipo',
@@ -197,24 +198,24 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
               ),
 
               // Especificaciones Técnicas
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _buildSectionHeader('⚙️ Especificaciones Técnicas'),
               _buildTextField(_microprocesadorController, 'Microprocesador',
                   Icons.memory_outlined),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_sistemaOperativoController, 'Sistema Operativo',
                   Icons.settings_outlined),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(
                   _marcaController, 'Marca', Icons.branding_watermark_outlined),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(_memoriaRAMController, 'Memoria RAM',
                         Icons.memory_outlined),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(_discoDuroController, 'Disco Duro',
                         Icons.storage_outlined),
@@ -223,7 +224,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
               ),
 
               // Estado y Ubicación
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _buildSectionHeader('📍 Estado y Ubicación'),
               Row(
                 children: [
@@ -237,7 +238,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                           setState(() => _estadoSeleccionado = value!),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildDropdownField(
                       value: _sedeSeleccionada,
@@ -250,12 +251,12 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(
                   _monitorController, 'Monitor', Icons.monitor_outlined),
 
               // Periféricos y Red
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _buildSectionHeader('🖨️ Periféricos y Red'),
               Row(
                 children: [
@@ -269,24 +270,24 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                           setState(() => _escanerSeleccionado = value!),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
                         _ipController, 'Dirección IP', Icons.language_outlined),
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildTextField(_impresorasController, 'Impresoras/Periféricos',
                   Icons.print_outlined),
 
               // Botón Guardar
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               Container(
                 width: double.infinity,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
@@ -294,9 +295,9 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF0D47A1).withOpacity(0.3),
+                      color: const Color(0xFF0D47A1).withOpacity(0.3),
                       blurRadius: 10,
-                      offset: Offset(0, 5),
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -313,13 +314,13 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.save_outlined, size: 20),
-                      SizedBox(width: 8),
+                      const Icon(Icons.save_outlined, size: 20),
+                      const SizedBox(width: 8),
                       Text(
                         widget.equipo == null
                             ? 'AGREGAR EQUIPO'
                             : 'ACTUALIZAR EQUIPO',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -329,7 +330,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -340,15 +341,15 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   Widget _buildSectionHeader(String title) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: Color(0xFF0D47A1).withOpacity(0.1),
+        color: const Color(0xFF0D47A1).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFF0D47A1).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF0D47A1).withOpacity(0.2)),
       ),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Color(0xFF0D47A1),
@@ -363,7 +364,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Color(0xFF0D47A1)),
+        prefixIcon: Icon(icon, color: const Color(0xFF0D47A1)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[400]!),
@@ -374,7 +375,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Color(0xFF0D47A1), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF0D47A1), width: 2),
         ),
         filled: true,
         fillColor: Colors.white,
@@ -405,7 +406,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
         value: value,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Color(0xFF0D47A1)),
+          prefixIcon: Icon(icon, color: const Color(0xFF0D47A1)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -416,7 +417,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Color(0xFF0D47A1), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF0D47A1), width: 2),
           ),
           filled: true,
           fillColor: Colors.white,

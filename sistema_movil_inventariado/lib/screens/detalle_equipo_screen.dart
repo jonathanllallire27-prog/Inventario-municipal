@@ -6,6 +6,7 @@ class DetalleEquipoScreen extends StatelessWidget {
   final bool isAdmin;
 
   const DetalleEquipoScreen({
+    super.key,
     required this.equipo,
     required this.isAdmin,
   });
@@ -13,28 +14,28 @@ class DetalleEquipoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text('Detalles del Equipo'),
-        backgroundColor: Color(0xFF0D47A1),
+        title: const Text('Detalles del Equipo'),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header con información principal
             _buildHeaderCard(),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Especificaciones Técnicas
             _buildSpecsCard(),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Configuración y Periféricos
             _buildPeripheralsCard(),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Información Adicional
             _buildAdditionalInfoCard(),
@@ -47,9 +48,9 @@ class DetalleEquipoScreen extends StatelessWidget {
   Widget _buildHeaderCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -57,9 +58,10 @@ class DetalleEquipoScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF0D47A1).withOpacity(0.3),
+            // ignore: deprecated_member_use
+            color: const Color(0xFF0D47A1).withOpacity(0.3),
             blurRadius: 15,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -75,16 +77,16 @@ class DetalleEquipoScreen extends StatelessWidget {
                   children: [
                     Text(
                       '${equipo.tipo} - ${equipo.oficina}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'N° ${equipo.numero}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white70,
                       ),
@@ -93,7 +95,8 @@ class DetalleEquipoScreen extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: _getEstadoColor(equipo.estado).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -110,16 +113,16 @@ class DetalleEquipoScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 16),
-          Divider(color: Colors.white30, height: 1),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white30, height: 1),
+          const SizedBox(height: 16),
           Row(
             children: [
               _buildHeaderItem(Icons.business_outlined, equipo.sede, 'Sede'),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               _buildHeaderItem(Icons.language_outlined,
                   equipo.ip.isEmpty ? 'Sin IP' : equipo.ip, 'IP'),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               _buildHeaderItem(
                   Icons.scanner_outlined, equipo.escaner, 'Escáner'),
             ],
@@ -136,7 +139,7 @@ class DetalleEquipoScreen extends StatelessWidget {
         SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -144,7 +147,7 @@ class DetalleEquipoScreen extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white70,
             fontSize: 10,
           ),
@@ -160,7 +163,7 @@ class DetalleEquipoScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 10,
@@ -171,7 +174,7 @@ class DetalleEquipoScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.memory_outlined, color: Color(0xFF0D47A1), size: 20),
               SizedBox(width: 8),
@@ -185,7 +188,7 @@ class DetalleEquipoScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildSpecItem('🧠 Procesador', equipo.microprocesador),
           _buildSpecItem('💻 Sistema Operativo', equipo.sistemaOperativo),
           _buildSpecItem('🏷️ Marca', equipo.marca),
@@ -200,11 +203,11 @@ class DetalleEquipoScreen extends StatelessWidget {
   Widget _buildPeripheralsCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 10,
@@ -215,7 +218,7 @@ class DetalleEquipoScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.print_outlined, color: Color(0xFF0D47A1), size: 20),
               SizedBox(width: 8),
@@ -229,7 +232,7 @@ class DetalleEquipoScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildSpecItem(
               '🖨️ Impresoras',
               equipo.impresoras.isEmpty
@@ -246,11 +249,11 @@ class DetalleEquipoScreen extends StatelessWidget {
   Widget _buildAdditionalInfoCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 10,
@@ -261,7 +264,7 @@ class DetalleEquipoScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.info_outline, color: Color(0xFF0D47A1), size: 20),
               SizedBox(width: 8),
@@ -275,7 +278,7 @@ class DetalleEquipoScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildSpecItem('🏢 Oficina', equipo.oficina),
           _buildSpecItem('📍 Sede', equipo.sede),
           _buildSpecItem('🔧 Tipo', equipo.tipo),
@@ -287,7 +290,7 @@ class DetalleEquipoScreen extends StatelessWidget {
 
   Widget _buildSpecItem(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -302,7 +305,7 @@ class DetalleEquipoScreen extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               value,
