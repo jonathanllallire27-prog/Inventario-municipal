@@ -1,5 +1,5 @@
-import 'package:sistema_movil_inventariado/models/equipo.dart';
 import 'package:flutter/material.dart';
+import 'package:sistema_movil_inventariado/models/equipo.dart';
 import '../providers/inventario_provider.dart';
 import '../widgets/equipo_card.dart';
 import '../widgets/stats_card.dart';
@@ -23,14 +23,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final oficinas = ['Todas', ..._inventarioProvider.getOficinas()];
 
     return Scaffold(
-      backgroundColor: Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text('Panel de Administración'),
-        backgroundColor: Color(0xFF0D47A1),
+        title: const Text('Panel de Administración'),
+        backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             onPressed: _mostrarBusqueda,
           ),
           PopupMenuButton<String>(
@@ -40,7 +40,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 Navigator.pushReplacementNamed(context, '/');
               }
             },
-            itemBuilder: (BuildContext context) => [
+            itemBuilder: (BuildContext context) => const [
               PopupMenuItem<String>(
                 value: 'logout',
                 child: Row(
@@ -59,13 +59,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         children: [
           // Filtros y Estadísticas
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             color: Colors.white,
             child: Column(
               children: [
                 // Filtro por Oficina
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.grey[50],
                     borderRadius: BorderRadius.circular(12),
@@ -74,13 +75,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   child: DropdownButton<String>(
                     value: _filtroOficina,
                     isExpanded: true,
-                    underline: SizedBox(),
+                    underline: const SizedBox(),
                     items: oficinas.map((String oficina) {
                       return DropdownMenuItem<String>(
                         value: oficina,
                         child: Text(
                           oficina,
-                          style: TextStyle(fontSize: 14),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       );
                     }).toList(),
@@ -91,7 +92,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     },
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 // Estadísticas
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -101,23 +102,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         title: 'Total Equipos',
                         value: estadisticas['total']!.toString(),
                         icon: Icons.computer,
-                        color: Color(0xFF0D47A1),
+                        color: const Color(0xFF0D47A1),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       StatsCard(
                         title: 'PC',
                         value: estadisticas['pc']!.toString(),
                         icon: Icons.desktop_windows,
                         color: Colors.green,
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       StatsCard(
                         title: 'Laptops',
                         value: estadisticas['laptop']!.toString(),
                         icon: Icons.laptop,
                         color: Colors.orange,
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       StatsCard(
                         title: 'Servidores',
                         value: estadisticas['servidor']!.toString(),
@@ -140,13 +141,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       children: [
                         Icon(Icons.inventory_2_outlined,
                             size: 80, color: Colors.grey[400]),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'No se encontraron equipos',
                           style:
                               TextStyle(fontSize: 18, color: Colors.grey[600]),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Intente cambiar los filtros de búsqueda',
                           style:
@@ -156,7 +157,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     itemCount: equipos.length,
                     itemBuilder: (context, index) {
                       final equipo = equipos[index];
@@ -169,6 +170,19 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                               builder: (context) => DetalleEquipoScreen(
                                 equipo: equipo,
                                 isAdmin: true,
+                                onEditar: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AgregarEquipoScreen(
+                                        equipo: equipo,
+                                      ),
+                                    ),
+                                  ).then((_) => setState(() {}));
+                                },
+                                onEliminar: () {
+                                  _mostrarDialogoEliminar(equipo);
+                                },
                               ),
                             ),
                           );
@@ -197,16 +211,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AgregarEquipoScreen(),
+              builder: (context) => const AgregarEquipoScreen(),
             ),
           ).then((_) => setState(() {}));
         },
-        backgroundColor: Color(0xFF0D47A1),
+        backgroundColor: const Color(0xFF0D47A1),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Icon(Icons.add, size: 28),
+        child: const Icon(Icons.add, size: 28),
         elevation: 4,
       ),
     );
@@ -241,14 +255,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Buscar Equipos'),
+        title: const Text('Buscar Equipos'),
         content: TextField(
           onChanged: (value) {
             setState(() {
               _searchQuery = value;
             });
           },
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Buscar por oficina, tipo, procesador...',
             prefixIcon: Icon(Icons.search),
           ),
@@ -261,11 +275,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               });
               Navigator.pop(context);
             },
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Aceptar'),
+            child: const Text('Aceptar'),
           ),
         ],
       ),
@@ -276,7 +290,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Eliminar Equipo'),
+        title: const Text('Eliminar Equipo'),
         content:
             Text('¿Está seguro de eliminar el equipo de ${equipo.oficina}?'),
         actions: [
@@ -290,14 +304,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               Navigator.pop(context);
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                   content: Text('Equipo eliminado exitosamente'),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
-            child: Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

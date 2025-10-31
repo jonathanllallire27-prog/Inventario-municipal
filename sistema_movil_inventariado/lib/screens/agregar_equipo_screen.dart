@@ -15,17 +15,7 @@ class AgregarEquipoScreen extends StatefulWidget {
 class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _numeroController = TextEditingController();
-  final _oficinaController = TextEditingController();
-  final _tipoController = TextEditingController();
-  final _microprocesadorController = TextEditingController();
-  final _sistemaOperativoController = TextEditingController();
-  final _marcaController = TextEditingController();
-  final _memoriaRAMController = TextEditingController();
-  final _discoDuroController = TextEditingController();
-  final _estadoController = TextEditingController();
   final _monitorController = TextEditingController();
-  final _sedeController = TextEditingController();
-  final _escanerController = TextEditingController();
   final _impresorasController = TextEditingController();
   final _ipController = TextEditingController();
 
@@ -33,11 +23,88 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   String _estadoSeleccionado = 'BUENO';
   String _sedeSeleccionada = 'PRINCIPAL';
   String _escanerSeleccionado = 'NO';
+  String _microprocesadorSeleccionado = 'Intel Core i3';
+  String _sistemaOperativoSeleccionado = 'Windows 10';
+  String _marcaSeleccionada = 'HP';
+  String _memoriaRAMSeleccionada = '8 GB';
+  String _discoDuroSeleccionado = '500 GB HDD';
+  String _oficinaSeleccionada = 'CATASTRO';
 
   final List<String> _tipos = ['PC', 'LAPTOP', 'SERVIDOR'];
   final List<String> _estados = ['BUENO', 'REGULAR', 'MALO'];
   final List<String> _sedes = ['PRINCIPAL', 'SUCURSAL'];
   final List<String> _escaneres = ['SI', 'NO'];
+
+  // Lista de procesadores actualizados
+  final List<String> _microprocesadores = [
+    'Intel Core i3',
+    'Intel Core i5',
+    'Intel Core i7',
+    'Intel Core i9',
+    'Intel Xeon',
+    'AMD Ryzen 3',
+    'AMD Ryzen 5',
+    'AMD Ryzen 7',
+    'AMD Ryzen 9',
+    'AMD EPYC',
+    'Apple M1',
+    'Apple M2',
+    'Apple M3',
+    'Otro'
+  ];
+
+  // Lista de sistemas operativos
+  final List<String> _sistemasOperativos = [
+    'Windows 10',
+    'Windows 11',
+    'Windows 8.1',
+    'Windows 7',
+    'Linux Ubuntu',
+    'Linux Debian',
+    'Linux CentOS',
+    'macOS',
+    'Sin Sistema Operativo'
+  ];
+
+  // Lista de marcas
+  final List<String> _marcas = [
+    'HP',
+    'Dell',
+    'Lenovo',
+    'Apple',
+    'Asus',
+    'Acer',
+    'Toshiba',
+    'Sony',
+    'Samsung',
+    'Otro'
+  ];
+
+  // Lista de memorias RAM
+  final List<String> _memoriasRAM = [
+    '2 GB',
+    '4 GB',
+    '8 GB',
+    '16 GB',
+    '32 GB',
+    '64 GB',
+    '128 GB'
+  ];
+
+  // Lista de discos duros - CORREGIDO: agregado '500 GB HDD'
+  final List<String> _discosDuros = [
+    '128 GB SSD',
+    '256 GB SSD',
+    '500 GB HDD', // Agregado este valor
+    '512 GB SSD',
+    '1 TB HDD',
+    '1 TB SSD',
+    '2 TB HDD',
+    '2 TB SSD',
+    '4 TB HDD',
+    '4 TB SSD'
+  ];
+
   final List<String> _oficinas = [
     'CATASTRO',
     'PROCURADURÍA PÚBLICA MUNICIPAL',
@@ -89,19 +156,54 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   void _cargarDatosEquipo() {
     final equipo = widget.equipo!;
     _numeroController.text = equipo.numero;
-    _oficinaController.text = equipo.oficina;
+    _oficinaSeleccionada = equipo.oficina;
     _tipoSeleccionado = equipo.tipo;
-    _microprocesadorController.text = equipo.microprocesador;
-    _sistemaOperativoController.text = equipo.sistemaOperativo;
-    _marcaController.text = equipo.marca;
-    _memoriaRAMController.text = equipo.memoriaRAM;
-    _discoDuroController.text = equipo.discoDuro;
+    _microprocesadorSeleccionado = equipo.microprocesador;
+    _sistemaOperativoSeleccionado = equipo.sistemaOperativo;
+    _marcaSeleccionada = equipo.marca;
+    _memoriaRAMSeleccionada = equipo.memoriaRAM;
+    _discoDuroSeleccionado = equipo.discoDuro;
     _estadoSeleccionado = equipo.estado;
     _monitorController.text = equipo.monitor;
     _sedeSeleccionada = equipo.sede;
     _escanerSeleccionado = equipo.escaner;
     _impresorasController.text = equipo.impresoras;
     _ipController.text = equipo.ip;
+
+    // Validar que los valores existan en las listas
+    _validarYCorregirValores();
+  }
+
+  void _validarYCorregirValores() {
+    // Validar microprocesador
+    if (!_microprocesadores.contains(_microprocesadorSeleccionado)) {
+      _microprocesadorSeleccionado = 'Intel Core i3';
+    }
+
+    // Validar sistema operativo
+    if (!_sistemasOperativos.contains(_sistemaOperativoSeleccionado)) {
+      _sistemaOperativoSeleccionado = 'Windows 10';
+    }
+
+    // Validar marca
+    if (!_marcas.contains(_marcaSeleccionada)) {
+      _marcaSeleccionada = 'HP';
+    }
+
+    // Validar memoria RAM
+    if (!_memoriasRAM.contains(_memoriaRAMSeleccionada)) {
+      _memoriaRAMSeleccionada = '8 GB';
+    }
+
+    // Validar disco duro
+    if (!_discosDuros.contains(_discoDuroSeleccionado)) {
+      _discoDuroSeleccionado = '500 GB HDD';
+    }
+
+    // Validar oficina
+    if (!_oficinas.contains(_oficinaSeleccionada)) {
+      _oficinaSeleccionada = 'CATASTRO';
+    }
   }
 
   void _guardarEquipo() {
@@ -110,13 +212,13 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
     final equipo = Equipo(
       id: widget.equipo?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       numero: _numeroController.text,
-      oficina: _oficinaController.text,
+      oficina: _oficinaSeleccionada,
       tipo: _tipoSeleccionado,
-      microprocesador: _microprocesadorController.text,
-      sistemaOperativo: _sistemaOperativoController.text,
-      marca: _marcaController.text,
-      memoriaRAM: _memoriaRAMController.text,
-      discoDuro: _discoDuroController.text,
+      microprocesador: _microprocesadorSeleccionado,
+      sistemaOperativo: _sistemaOperativoSeleccionado,
+      marca: _marcaSeleccionada,
+      memoriaRAM: _memoriaRAMSeleccionada,
+      discoDuro: _discoDuroSeleccionado,
       estado: _estadoSeleccionado,
       monitor: _monitorController.text,
       sede: _sedeSeleccionada,
@@ -179,13 +281,12 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
                   Icons.confirmation_number_outlined),
               const SizedBox(height: 16),
               _buildDropdownField(
-                value: _oficinaController.text.isEmpty
-                    ? null
-                    : _oficinaController.text,
+                value: _oficinaSeleccionada,
                 label: 'Oficina',
                 icon: Icons.work_outline,
                 items: _oficinas,
-                onChanged: (value) => _oficinaController.text = value!,
+                onChanged: (value) =>
+                    setState(() => _oficinaSeleccionada = value!),
               ),
               const SizedBox(height: 16),
               _buildDropdownField(
@@ -200,25 +301,55 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
               // Especificaciones Técnicas
               const SizedBox(height: 24),
               _buildSectionHeader('⚙️ Especificaciones Técnicas'),
-              _buildTextField(_microprocesadorController, 'Microprocesador',
-                  Icons.memory_outlined),
+              _buildDropdownField(
+                value: _microprocesadorSeleccionado,
+                label: 'Microprocesador',
+                icon: Icons.memory_outlined,
+                items: _microprocesadores,
+                onChanged: (value) =>
+                    setState(() => _microprocesadorSeleccionado = value!),
+              ),
               const SizedBox(height: 16),
-              _buildTextField(_sistemaOperativoController, 'Sistema Operativo',
-                  Icons.settings_outlined),
+              _buildDropdownField(
+                value: _sistemaOperativoSeleccionado,
+                label: 'Sistema Operativo',
+                icon: Icons.settings_outlined,
+                items: _sistemasOperativos,
+                onChanged: (value) =>
+                    setState(() => _sistemaOperativoSeleccionado = value!),
+              ),
               const SizedBox(height: 16),
-              _buildTextField(
-                  _marcaController, 'Marca', Icons.branding_watermark_outlined),
+              _buildDropdownField(
+                value: _marcaSeleccionada,
+                label: 'Marca',
+                icon: Icons.branding_watermark_outlined,
+                items: _marcas,
+                onChanged: (value) =>
+                    setState(() => _marcaSeleccionada = value!),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: _buildTextField(_memoriaRAMController, 'Memoria RAM',
-                        Icons.memory_outlined),
+                    child: _buildDropdownField(
+                      value: _memoriaRAMSeleccionada,
+                      label: 'Memoria RAM',
+                      icon: Icons.memory_outlined,
+                      items: _memoriasRAM,
+                      onChanged: (value) =>
+                          setState(() => _memoriaRAMSeleccionada = value!),
+                    ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 5),
                   Expanded(
-                    child: _buildTextField(_discoDuroController, 'Disco Duro',
-                        Icons.storage_outlined),
+                    child: _buildDropdownField(
+                      value: _discoDuroSeleccionado,
+                      label: 'Disco Duro',
+                      icon: Icons.storage_outlined,
+                      items: _discosDuros,
+                      onChanged: (value) =>
+                          setState(() => _discoDuroSeleccionado = value!),
+                    ),
                   ),
                 ],
               ),
@@ -390,7 +521,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   }
 
   Widget _buildDropdownField({
-    required String? value,
+    required String value,
     required String label,
     required IconData icon,
     required List<String> items,
@@ -442,12 +573,6 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
   @override
   void dispose() {
     _numeroController.dispose();
-    _oficinaController.dispose();
-    _microprocesadorController.dispose();
-    _sistemaOperativoController.dispose();
-    _marcaController.dispose();
-    _memoriaRAMController.dispose();
-    _discoDuroController.dispose();
     _monitorController.dispose();
     _impresorasController.dispose();
     _ipController.dispose();

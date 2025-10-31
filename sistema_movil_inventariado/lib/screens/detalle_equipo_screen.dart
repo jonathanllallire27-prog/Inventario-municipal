@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import '../models/equipo.dart';
+import 'agregar_equipo_screen.dart';
 
 class DetalleEquipoScreen extends StatelessWidget {
   final Equipo equipo;
   final bool isAdmin;
+  final VoidCallback? onEditar;
+  final VoidCallback? onEliminar;
 
   const DetalleEquipoScreen({
     super.key,
     required this.equipo,
     required this.isAdmin,
+    this.onEditar,
+    this.onEliminar,
   });
 
   @override
@@ -19,6 +24,29 @@ class DetalleEquipoScreen extends StatelessWidget {
         title: const Text('Detalles del Equipo'),
         backgroundColor: const Color(0xFF0D47A1),
         elevation: 0,
+        actions: isAdmin
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: onEditar ??
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AgregarEquipoScreen(equipo: equipo),
+                          ),
+                        );
+                      },
+                  tooltip: 'Editar Equipo',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _mostrarDialogoEliminar(context),
+                  tooltip: 'Eliminar Equipo',
+                ),
+              ]
+            : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -42,6 +70,150 @@ class DetalleEquipoScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton:
+          isAdmin ? _buildFloatingActionButtons(context) : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  Widget _buildFloatingActionButtons(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Botón Eliminar
+          FloatingActionButton.extended(
+            heroTag: 'delete_btn',
+            onPressed: onEliminar ??
+                () {
+                  _mostrarDialogoEliminar(context);
+                },
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.delete_outlined),
+            label: const Text('ELIMINAR'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+
+          // Botón Editar
+          FloatingActionButton.extended(
+            heroTag: 'edit_btn',
+            onPressed: onEditar ??
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AgregarEquipoScreen(equipo: equipo),
+                    ),
+                  );
+                },
+            backgroundColor: const Color(0xFF0D47A1),
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('EDITAR'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarDialogoEliminar(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_outlined, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Confirmar Eliminación'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '¿Estás seguro de que deseas eliminar el equipo:',
+                style: TextStyle(
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${equipo.tipo} - N° ${equipo.numero}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Oficina: ${equipo.oficina}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.red, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Esta acción no se puede deshacer',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('CANCELAR'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar diálogo
+                if (onEliminar != null) {
+                  onEliminar!(); // Llamar al callback de eliminación
+                } else {
+                  // Si no hay callback, simplemente regresamos
+                  Navigator.of(context)
+                      .pop(); // Regresar a la pantalla anterior
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('ELIMINAR'),
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        );
+      },
     );
   }
 
@@ -58,7 +230,6 @@ class DetalleEquipoScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: const Color(0xFF0D47A1).withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
@@ -136,7 +307,7 @@ class DetalleEquipoScreen extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: Colors.white70, size: 20),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
@@ -159,7 +330,7 @@ class DetalleEquipoScreen extends StatelessWidget {
   Widget _buildSpecsCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -294,7 +465,7 @@ class DetalleEquipoScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          SizedBox(
             width: 120,
             child: Text(
               label,
