@@ -5,7 +5,7 @@ import '../models/equipo.dart';
 class ApiService {
   // URL del servidor backend
   // Usar la IP de la computadora para conectar desde dispositivos en la red local
-  static const String baseUrl = 'http://200.37.187.246:3000/api';
+  static const String baseUrl = 'http://182.18.8.176:3000/api';
 
   String? _token;
   Map<String, dynamic>? _currentUser;
