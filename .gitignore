@@ -1,0 +1,19 @@
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific ignores are handled in subdirectories
+# backend/.gitignore
+# sistema_movil_inventariado/.gitignore

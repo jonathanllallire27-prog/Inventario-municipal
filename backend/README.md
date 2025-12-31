@@ -57,11 +57,13 @@ JWT_EXPIRES_IN=24h
 ### 4. Iniciar el servidor
 
 **Modo desarrollo (con auto-reload):**
+
 ```bash
 npm run dev
 ```
 
 **Modo producción:**
+
 ```bash
 npm start
 ```
@@ -72,23 +74,23 @@ El servidor iniciará en `http://localhost:3000`
 
 ### Autenticación
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | Iniciar sesión |
-| POST | `/api/auth/register` | Registrar usuario |
-| GET | `/api/auth/verify` | Verificar token |
+| Método | Endpoint             | Descripción       |
+| ------ | -------------------- | ----------------- |
+| POST   | `/api/auth/login`    | Iniciar sesión    |
+| POST   | `/api/auth/register` | Registrar usuario |
+| GET    | `/api/auth/verify`   | Verificar token   |
 
 ### Equipos
 
-| Método | Endpoint | Descripción | Auth |
-|--------|----------|-------------|------|
-| GET | `/api/equipos` | Listar equipos | ❌ |
-| GET | `/api/equipos/estadisticas` | Obtener estadísticas | ❌ |
-| GET | `/api/equipos/oficinas` | Listar oficinas | ❌ |
-| GET | `/api/equipos/:id` | Obtener equipo | ❌ |
-| POST | `/api/equipos` | Crear equipo | ✅ Admin |
-| PUT | `/api/equipos/:id` | Actualizar equipo | ✅ Admin |
-| DELETE | `/api/equipos/:id` | Eliminar equipo | ✅ Admin |
+| Método | Endpoint                    | Descripción          | Auth     |
+| ------ | --------------------------- | -------------------- | -------- |
+| GET    | `/api/equipos`              | Listar equipos       | ❌       |
+| GET    | `/api/equipos/estadisticas` | Obtener estadísticas | ❌       |
+| GET    | `/api/equipos/oficinas`     | Listar oficinas      | ❌       |
+| GET    | `/api/equipos/:id`          | Obtener equipo       | ❌       |
+| POST   | `/api/equipos`              | Crear equipo         | ✅ Admin |
+| PUT    | `/api/equipos/:id`          | Actualizar equipo    | ✅ Admin |
+| DELETE | `/api/equipos/:id`          | Eliminar equipo      | ✅ Admin |
 
 ### Parámetros de consulta (GET /api/equipos)
 
@@ -142,7 +144,7 @@ import 'services/api_service.dart';
 
 // Configurar la URL base según el entorno:
 // - Emulador Android: 10.0.2.2:3000
-// - Dispositivo físico: IP de tu PC (ej: 192.168.1.100:3000)
+// - Dispositivo físico: IP de tu PC (ej: 182.18.8.7:3000)
 // - iOS Simulator: localhost:3000
 ```
 
