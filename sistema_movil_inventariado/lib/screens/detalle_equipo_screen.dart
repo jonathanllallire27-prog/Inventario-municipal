@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/equipo.dart';
+import '../theme/app_theme.dart';
 import 'agregar_equipo_screen.dart';
 
-class DetalleEquipoScreen extends StatelessWidget {
+class DetalleEquipoScreen extends StatefulWidget {
   final Equipo equipo;
   final bool isAdmin;
   final VoidCallback? onEditar;
@@ -17,105 +19,719 @@ class DetalleEquipoScreen extends StatelessWidget {
   });
 
   @override
+  State<DetalleEquipoScreen> createState() => _DetalleEquipoScreenState();
+}
+
+class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Detalles del Equipo'),
-        backgroundColor: const Color(0xFF0D47A1),
-        elevation: 0,
-        actions: isAdmin
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: onEditar ??
-                      () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AgregarEquipoScreen(equipo: equipo),
-                          ),
-                        );
-                      },
-                  tooltip: 'Editar Equipo',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _mostrarDialogoEliminar(context),
-                  tooltip: 'Eliminar Equipo',
-                ),
-              ]
-            : null,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final tipoColor = AppTheme.getTypeColor(widget.equipo.tipo);
+    final estadoColor = AppTheme.getStatusColor(widget.equipo.estado);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: AppTheme.surfaceLight,
+        body: CustomScrollView(
+          slivers: [
             // Header con información principal
-            _buildHeaderCard(),
-            const SizedBox(height: 20),
+            _buildSliverHeader(tipoColor, estadoColor),
 
-            // Especificaciones Técnicas
-            _buildSpecsCard(),
-            const SizedBox(height: 20),
-
-            // Configuración y Periféricos
-            _buildPeripheralsCard(),
-            const SizedBox(height: 20),
-
-            // Información Adicional
-            _buildAdditionalInfoCard(),
+            // Contenido
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                        16, 24, 16, widget.isAdmin ? 100 : 24),
+                    child: Column(
+                      children: [
+                        _buildSpecsCard(),
+                        const SizedBox(height: 16),
+                        _buildPeripheralsCard(),
+                        const SizedBox(height: 16),
+                        _buildAdditionalInfoCard(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
+        floatingActionButton:
+            widget.isAdmin ? _buildFloatingActionButtons(context) : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
-      floatingActionButton:
-          isAdmin ? _buildFloatingActionButtons(context) : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  Widget _buildSliverHeader(Color tipoColor, Color estadoColor) {
+    return SliverAppBar(
+      expandedHeight: 260,
+      floating: false,
+      pinned: true,
+      stretch: true,
+      backgroundColor: AppTheme.primaryBlue,
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      actions: widget.isAdmin
+          ? [
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.edit_rounded,
+                      color: Colors.white, size: 20),
+                ),
+                onPressed: widget.onEditar ??
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AgregarEquipoScreen(equipo: widget.equipo),
+                        ),
+                      );
+                    },
+              ),
+              const SizedBox(width: 8),
+            ]
+          : null,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+          ),
+          child: Stack(
+            children: [
+              // Decoraciones
+              Positioned(
+                top: -80,
+                right: -60,
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: tipoColor.withOpacity(0.15),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -40,
+                left: -40,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.05),
+                  ),
+                ),
+              ),
+
+              // Contenido del header
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Badges
+                      Row(
+                        children: [
+                          _buildBadge(
+                            icon: AppTheme.getTypeIcon(widget.equipo.tipo),
+                            label: widget.equipo.tipo,
+                            color: tipoColor,
+                          ),
+                          const SizedBox(width: 10),
+                          _buildStatusBadge(estadoColor),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Oficina (título principal)
+                      Text(
+                        widget.equipo.oficina,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Número y procesador
+                      Row(
+                        children: [
+                          _buildHeaderChip(
+                            icon: Icons.tag_rounded,
+                            text: 'N° ${widget.equipo.numero}',
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildHeaderChip(
+                              icon: Icons.memory_rounded,
+                              text: widget.equipo.microprocesador,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Información rápida
+                      Row(
+                        children: [
+                          _buildQuickInfo(
+                            icon: Icons.business_rounded,
+                            value: widget.equipo.sede,
+                            label: 'Sede',
+                          ),
+                          const SizedBox(width: 24),
+                          _buildQuickInfo(
+                            icon: Icons.language_rounded,
+                            value: widget.equipo.ip.isEmpty
+                                ? 'No asignada'
+                                : widget.equipo.ip,
+                            label: 'IP',
+                          ),
+                          const SizedBox(width: 24),
+                          _buildQuickInfo(
+                            icon: Icons.scanner_rounded,
+                            value: widget.equipo.escaner,
+                            label: 'Escáner',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadge({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.5),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            widget.equipo.estado,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderChip({required IconData icon, required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white70),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickInfo({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: Colors.white54),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.white54,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpecsCard() {
+    return _buildCard(
+      icon: Icons.memory_rounded,
+      title: 'Especificaciones Técnicas',
+      color: AppTheme.accentBlue,
+      children: [
+        _buildSpecRow(
+          icon: Icons.developer_board_rounded,
+          label: 'Procesador',
+          value: widget.equipo.microprocesador,
+        ),
+        _buildSpecRow(
+          icon: Icons.computer_rounded,
+          label: 'Sistema Operativo',
+          value: widget.equipo.sistemaOperativo,
+        ),
+        _buildSpecRow(
+          icon: Icons.build_rounded,
+          label: 'Marca',
+          value: widget.equipo.marca,
+        ),
+        _buildSpecRow(
+          icon: Icons.memory_rounded,
+          label: 'Memoria RAM',
+          value: widget.equipo.memoriaRAM,
+        ),
+        _buildSpecRow(
+          icon: Icons.storage_rounded,
+          label: 'Disco Duro',
+          value: widget.equipo.discoDuro,
+        ),
+        _buildSpecRow(
+          icon: Icons.monitor_rounded,
+          label: 'Monitor',
+          value: widget.equipo.monitor,
+          isLast: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPeripheralsCard() {
+    return _buildCard(
+      icon: Icons.devices_rounded,
+      title: 'Periféricos y Red',
+      color: AppTheme.infoPurple,
+      children: [
+        _buildSpecRow(
+          icon: Icons.print_rounded,
+          label: 'Impresoras',
+          value: widget.equipo.impresoras.isEmpty
+              ? 'No especificado'
+              : widget.equipo.impresoras,
+        ),
+        _buildSpecRow(
+          icon: Icons.scanner_rounded,
+          label: 'Escáner',
+          value: widget.equipo.escaner,
+        ),
+        _buildSpecRow(
+          icon: Icons.language_rounded,
+          label: 'Dirección IP',
+          value: widget.equipo.ip.isEmpty ? 'No asignada' : widget.equipo.ip,
+          isLast: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalInfoCard() {
+    return _buildCard(
+      icon: Icons.info_rounded,
+      title: 'Información Adicional',
+      color: AppTheme.accentCyan,
+      children: [
+        _buildSpecRow(
+          icon: Icons.business_rounded,
+          label: 'Oficina',
+          value: widget.equipo.oficina,
+        ),
+        _buildSpecRow(
+          icon: Icons.location_on_rounded,
+          label: 'Sede',
+          value: widget.equipo.sede,
+        ),
+        _buildSpecRow(
+          icon: Icons.category_rounded,
+          label: 'Tipo',
+          value: widget.equipo.tipo,
+        ),
+        _buildSpecRow(
+          icon: Icons.numbers_rounded,
+          label: 'Número',
+          value: widget.equipo.numero,
+          isLast: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(
+          color: color.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header de la card
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  color.withOpacity(0.08),
+                  color.withOpacity(0.02),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Contenido
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+            child: Column(children: children),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpecRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : const Border(
+                bottom: BorderSide(
+                  color: Color(0xFFF1F5F9),
+                  width: 1,
+                ),
+              ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildFloatingActionButtons(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Botón Eliminar
-          FloatingActionButton.extended(
-            heroTag: 'delete_btn',
-            onPressed: onEliminar ??
-                () {
-                  _mostrarDialogoEliminar(context);
-                },
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            icon: const Icon(Icons.delete_outlined),
-            label: const Text('ELIMINAR'),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppTheme.cardShadow,
+                border: Border.all(
+                  color: AppTheme.errorRed.withOpacity(0.2),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _mostrarDialogoEliminar(context),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.delete_rounded,
+                          color: AppTheme.errorRed,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Eliminar',
+                          style: TextStyle(
+                            color: AppTheme.errorRed,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
 
+          const SizedBox(width: 12),
+
           // Botón Editar
-          FloatingActionButton.extended(
-            heroTag: 'edit_btn',
-            onPressed: onEditar ??
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AgregarEquipoScreen(equipo: equipo),
+          Expanded(
+            flex: 2,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.accentGradient,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentBlue.withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: widget.onEditar ??
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AgregarEquipoScreen(equipo: widget.equipo),
+                          ),
+                        );
+                      },
+                  borderRadius: BorderRadius.circular(16),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.edit_rounded, color: Colors.white, size: 22),
+                        SizedBox(width: 8),
+                        Text(
+                          'Editar Equipo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-            backgroundColor: const Color(0xFF0D47A1),
-            foregroundColor: Colors.white,
-            icon: const Icon(Icons.edit_outlined),
-            label: const Text('EDITAR'),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -126,58 +742,126 @@ class DetalleEquipoScreen extends StatelessWidget {
   void _mostrarDialogoEliminar(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.warning_amber_outlined, color: Colors.orange),
-              SizedBox(width: 8),
-              Text('Confirmar Eliminación'),
-            ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
+          contentPadding: const EdgeInsets.all(24),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '¿Estás seguro de que deseas eliminar el equipo:',
-                style: TextStyle(
-                  color: Colors.grey[700],
+              // Icono de advertencia
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.warning_rounded,
+                  size: 40,
+                  color: AppTheme.errorRed,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${equipo.tipo} - N° ${equipo.numero}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              const SizedBox(height: 20),
+
+              // Título
+              const Text(
+                'Eliminar Equipo',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 12),
+
+              // Descripción
               Text(
-                'Oficina: ${equipo.oficina}',
+                '¿Estás seguro de eliminar este equipo?',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey[600],
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
+
+              // Info del equipo
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.getTypeColor(widget.equipo.tipo)
+                            .withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        AppTheme.getTypeIcon(widget.equipo.tipo),
+                        color: AppTheme.getTypeColor(widget.equipo.tipo),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${widget.equipo.tipo} - N° ${widget.equipo.numero}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            widget.equipo.oficina,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Advertencia
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  color: AppTheme.errorRed.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppTheme.errorRed.withOpacity(0.2),
+                  ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.red, size: 16),
-                    SizedBox(width: 8),
-                    Expanded(
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: AppTheme.errorRed,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
                       child: Text(
                         'Esta acción no se puede deshacer',
                         style: TextStyle(
-                          color: Colors.red,
+                          color: AppTheme.errorRed,
                           fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -187,320 +871,47 @@ class DetalleEquipoScreen extends StatelessWidget {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('CANCELAR'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Cerrar diálogo
-                if (onEliminar != null) {
-                  onEliminar!(); // Llamar al callback de eliminación
-                } else {
-                  // Si no hay callback, simplemente regresamos
-                  Navigator.of(context)
-                      .pop(); // Regresar a la pantalla anterior
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('ELIMINAR'),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      if (widget.onEliminar != null) {
+                        widget.onEliminar!();
+                      }
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.errorRed,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Eliminar'),
+                  ),
+                ),
+              ],
             ),
           ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
         );
       },
     );
-  }
-
-  Widget _buildHeaderCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0D47A1).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${equipo.tipo} - ${equipo.oficina}',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'N° ${equipo.numero}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _getEstadoColor(equipo.estado).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _getEstadoColor(equipo.estado)),
-                ),
-                child: Text(
-                  equipo.estado,
-                  style: TextStyle(
-                    color: _getEstadoColor(equipo.estado),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(color: Colors.white30, height: 1),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildHeaderItem(Icons.business_outlined, equipo.sede, 'Sede'),
-              const SizedBox(width: 20),
-              _buildHeaderItem(Icons.language_outlined,
-                  equipo.ip.isEmpty ? 'Sin IP' : equipo.ip, 'IP'),
-              const SizedBox(width: 20),
-              _buildHeaderItem(
-                  Icons.scanner_outlined, equipo.escaner, 'Escáner'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderItem(IconData icon, String value, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white70, size: 20),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 10,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSpecsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.memory_outlined, color: Color(0xFF0D47A1), size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Especificaciones Técnicas',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0D47A1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildSpecItem('🧠 Procesador', equipo.microprocesador),
-          _buildSpecItem('💻 Sistema Operativo', equipo.sistemaOperativo),
-          _buildSpecItem('🏷️ Marca', equipo.marca),
-          _buildSpecItem('📊 Memoria RAM', equipo.memoriaRAM),
-          _buildSpecItem('💾 Disco Duro', equipo.discoDuro),
-          _buildSpecItem('🖥️ Monitor', equipo.monitor),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPeripheralsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.print_outlined, color: Color(0xFF0D47A1), size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Periféricos y Red',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0D47A1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildSpecItem(
-              '🖨️ Impresoras',
-              equipo.impresoras.isEmpty
-                  ? 'No especificado'
-                  : equipo.impresoras),
-          _buildSpecItem('📡 Escáner', equipo.escaner),
-          _buildSpecItem(
-              '🌐 Dirección IP', equipo.ip.isEmpty ? 'No asignada' : equipo.ip),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAdditionalInfoCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.info_outline, color: Color(0xFF0D47A1), size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Información Adicional',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0D47A1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildSpecItem('🏢 Oficina', equipo.oficina),
-          _buildSpecItem('📍 Sede', equipo.sede),
-          _buildSpecItem('🔧 Tipo', equipo.tipo),
-          _buildSpecItem('📋 Número', equipo.numero),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSpecItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[800],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getEstadoColor(String estado) {
-    switch (estado) {
-      case 'BUENO':
-        return Colors.green;
-      case 'REGULAR':
-        return Colors.orange;
-      case 'MALO':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 }

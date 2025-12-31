@@ -6,37 +6,38 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
 
   const CustomAppBar({
+    super.key,
     required this.title,
     this.actions,
     this.showBackButton = true,
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 18,
         ),
       ),
       leading: showBackButton
           ? IconButton(
-              icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
               onPressed: () {
                 Navigator.pop(context);
               },
             )
           : null,
       actions: actions,
-      backgroundColor: Color(0xFF0D47A1),
+      backgroundColor: const Color(0xFF0D47A1),
       elevation: 0,
       centerTitle: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),

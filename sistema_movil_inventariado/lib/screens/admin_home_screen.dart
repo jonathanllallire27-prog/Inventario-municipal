@@ -1,87 +1,568 @@
 import 'package:flutter/material.dart';
-import 'package:sistema_movil_inventariado/models/equipo.dart';
-import '../providers/inventario_provider.dart';
+import 'package:flutter/services.dart';
+import '../models/equipo.dart';
+import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/equipo_card.dart';
 import '../widgets/stats_card.dart';
 import 'agregar_equipo_screen.dart';
 import 'detalle_equipo_screen.dart';
+import 'login_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
+  const AdminHomeScreen({super.key});
+
   @override
-  _AdminHomeScreenState createState() => _AdminHomeScreenState();
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
 }
 
-class _AdminHomeScreenState extends State<AdminHomeScreen> {
-  final InventarioProvider _inventarioProvider = InventarioProvider();
+class _AdminHomeScreenState extends State<AdminHomeScreen>
+    with SingleTickerProviderStateMixin {
+  final ApiService _apiService = ApiService();
   String _filtroOficina = 'Todas';
   String _searchQuery = '';
+  bool _isSearching = false;
+
+  List<Equipo> _equipos = [];
+  Map<String, int> _estadisticas = {};
+  List<String> _oficinas = [];
+  bool _isLoading = true;
+
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  late AnimationController _fabAnimationController;
+  late Animation<double> _fabAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarDatos();
+    _initAnimations();
+  }
+
+  void _initAnimations() {
+    _fabAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _fabAnimation = CurvedAnimation(
+      parent: _fabAnimationController,
+      curve: Curves.easeOutBack,
+    );
+    // Mostrar FAB después de cargar
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _fabAnimationController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    _fabAnimationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _cargarDatos() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final equipos = await _apiService.getEquipos();
+      final estadisticas = await _apiService.getEstadisticas();
+      final oficinas = await _apiService.getOficinas();
+
+      if (mounted) {
+        setState(() {
+          _equipos = equipos;
+          _estadisticas = estadisticas;
+          _oficinas = oficinas;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackbar('Error al cargar datos: $e');
+      }
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme.errorRed,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme.successGreen,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final equipos = _getEquiposFiltrados();
-    final estadisticas = _inventarioProvider.getEstadisticas();
-    final oficinas = ['Todas', ..._inventarioProvider.getOficinas()];
+    final equiposFiltrados = _getEquiposFiltrados();
+    final oficinas = ['Todas', ..._oficinas];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Panel de Administración'),
-        backgroundColor: const Color(0xFF0D47A1),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _mostrarBusqueda,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        // Mostrar diálogo de confirmación para cerrar sesión
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.exit_to_app_rounded, color: AppTheme.warningOrange),
+                SizedBox(width: 12),
+                Text('¿Cerrar sesión?'),
+              ],
+            ),
+            content: const Text('¿Deseas cerrar sesión y volver al inicio?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.warningOrange,
+                ),
+                child: const Text('Cerrar Sesión'),
+              ),
+            ],
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _inventarioProvider.logout();
-                Navigator.pushReplacementNamed(context, '/');
-              }
-            },
-            itemBuilder: (BuildContext context) => const [
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Cerrar Sesión'),
-                  ],
+        );
+        if (shouldPop == true && context.mounted) {
+          _apiService.logout();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: AppTheme.surfaceLight,
+          body: _isLoading
+              ? _buildLoadingState()
+              : RefreshIndicator(
+                  onRefresh: _cargarDatos,
+                  color: AppTheme.accentBlue,
+                  child: CustomScrollView(
+                    slivers: [
+                      // AppBar personalizada
+                      _buildSliverAppBar(),
+
+                      // Header con estadísticas
+                      SliverToBoxAdapter(
+                        child: _buildStatsSection(),
+                      ),
+
+                      // Filtros
+                      SliverToBoxAdapter(
+                        child: _buildFiltersSection(oficinas),
+                      ),
+
+                      // Lista de equipos
+                      equiposFiltrados.isEmpty
+                          ? SliverFillRemaining(
+                              child: _buildEmptyState(),
+                            )
+                          : SliverPadding(
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final equipo = equiposFiltrados[index];
+                                    return EquipoCard(
+                                      equipo: equipo,
+                                      onTap: () => _navigateToDetail(equipo),
+                                      onEdit: () => _navigateToEdit(equipo),
+                                      onDelete: () =>
+                                          _mostrarDialogoEliminar(equipo),
+                                    );
+                                  },
+                                  childCount: equiposFiltrados.length,
+                                ),
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
+          floatingActionButton: ScaleTransition(
+            scale: _fabAnimation,
+            child: FloatingActionButton.extended(
+              onPressed: _navigateToAdd,
+              backgroundColor: AppTheme.accentBlue,
+              foregroundColor: Colors.white,
+              elevation: 8,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text(
+                'Nuevo',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 140,
+      floating: false,
+      pinned: true,
+      stretch: true,
+      backgroundColor: AppTheme.primaryBlue,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+          ),
+          child: Stack(
+            children: [
+              // Decoraciones de fondo
+              Positioned(
+                top: -50,
+                right: -30,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.05),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -20,
+                left: -40,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.accentCyan.withOpacity(0.1),
+                  ),
+                ),
+              ),
+              // Contenido
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.admin_panel_settings_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Panel de Administración',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
+        ),
+      ),
+      actions: [
+        // Botón de búsqueda
+        IconButton(
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              _isSearching ? Icons.close_rounded : Icons.search_rounded,
+              key: ValueKey(_isSearching),
+            ),
+          ),
+          onPressed: () {
+            setState(() {
+              _isSearching = !_isSearching;
+              if (!_isSearching) {
+                _searchQuery = '';
+                _searchController.clear();
+              }
+            });
+          },
+        ),
+        // Botón de refrescar
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded),
+          onPressed: _cargarDatos,
+        ),
+        // Menú
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert_rounded),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          offset: const Offset(0, 50),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: AppTheme.errorRed,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Cerrar Sesión',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) {
+            if (value == 'logout') {
+              _logout();
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsSection() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Barra de búsqueda animada
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: _isSearching ? 56 : 0,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _isSearching ? 1 : 0,
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: AppTheme.subtleShadow,
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por oficina, tipo, procesador...',
+                    hintStyle: const TextStyle(
+                      color: AppTheme.textMuted,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: AppTheme.textSecondary,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.clear_rounded,
+                              color: AppTheme.textSecondary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _searchQuery = '';
+                                _searchController.clear();
+                              });
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Título de estadísticas
+          const Text(
+            'Resumen del Inventario',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Cards de estadísticas
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                StatsCard(
+                  title: 'Total',
+                  value: (_estadisticas['total'] ?? 0).toString(),
+                  icon: Icons.inventory_2_rounded,
+                  color: AppTheme.primaryBlue,
+                ),
+                const SizedBox(width: 12),
+                StatsCard(
+                  title: 'PC',
+                  value: (_estadisticas['pc'] ?? 0).toString(),
+                  icon: Icons.desktop_windows_rounded,
+                  color: AppTheme.accentBlue,
+                ),
+                const SizedBox(width: 12),
+                StatsCard(
+                  title: 'Laptops',
+                  value: (_estadisticas['laptop'] ?? 0).toString(),
+                  icon: Icons.laptop_rounded,
+                  color: AppTheme.successGreen,
+                ),
+                const SizedBox(width: 12),
+                StatsCard(
+                  title: 'Servidores',
+                  value: (_estadisticas['servidor'] ?? 0).toString(),
+                  icon: Icons.dns_rounded,
+                  color: AppTheme.infoPurple,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
-      body: Column(
+    );
+  }
+
+  Widget _buildFiltersSection(List<String> oficinas) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filtros y Estadísticas
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
-            child: Column(
-              children: [
-                // Filtro por Oficina
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Equipos (${_getEquiposFiltrados().length})',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+
+              // Dropdown de filtro
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
                   ),
+                  boxShadow: AppTheme.subtleShadow,
+                ),
+                child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: _filtroOficina,
-                    isExpanded: true,
-                    underline: const SizedBox(),
+                    value: oficinas.contains(_filtroOficina)
+                        ? _filtroOficina
+                        : 'Todas',
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppTheme.textSecondary,
+                    ),
+                    isDense: true,
                     items: oficinas.map((String oficina) {
                       return DropdownMenuItem<String>(
                         value: oficina,
                         child: Text(
-                          oficina,
-                          style: const TextStyle(fontSize: 14),
+                          oficina.length > 20
+                              ? '${oficina.substring(0, 20)}...'
+                              : oficina,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -92,149 +573,116 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
-                // Estadísticas
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      StatsCard(
-                        title: 'Total Equipos',
-                        value: estadisticas['total']!.toString(),
-                        icon: Icons.computer,
-                        color: const Color(0xFF0D47A1),
-                      ),
-                      const SizedBox(width: 12),
-                      StatsCard(
-                        title: 'PC',
-                        value: estadisticas['pc']!.toString(),
-                        icon: Icons.desktop_windows,
-                        color: Colors.green,
-                      ),
-                      const SizedBox(width: 12),
-                      StatsCard(
-                        title: 'Laptops',
-                        value: estadisticas['laptop']!.toString(),
-                        icon: Icons.laptop,
-                        color: Colors.orange,
-                      ),
-                      const SizedBox(width: 12),
-                      StatsCard(
-                        title: 'Servidores',
-                        value: estadisticas['servidor']!.toString(),
-                        icon: Icons.storage,
-                        color: Colors.purple,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Lista de Equipos
-          Expanded(
-            child: equipos.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inventory_2_outlined,
-                            size: 80, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No se encontraron equipos',
-                          style:
-                              TextStyle(fontSize: 18, color: Colors.grey[600]),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Intente cambiar los filtros de búsqueda',
-                          style:
-                              TextStyle(fontSize: 14, color: Colors.grey[500]),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: equipos.length,
-                    itemBuilder: (context, index) {
-                      final equipo = equipos[index];
-                      return EquipoCard(
-                        equipo: equipo,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DetalleEquipoScreen(
-                                equipo: equipo,
-                                isAdmin: true,
-                                onEditar: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AgregarEquipoScreen(
-                                        equipo: equipo,
-                                      ),
-                                    ),
-                                  ).then((_) => setState(() {}));
-                                },
-                                onEliminar: () {
-                                  _mostrarDialogoEliminar(equipo);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        onEdit: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AgregarEquipoScreen(
-                                equipo: equipo,
-                              ),
-                            ),
-                          ).then((_) => setState(() {}));
-                        },
-                        onDelete: () {
-                          _mostrarDialogoEliminar(equipo);
-                        },
-                      );
-                    },
-                  ),
-          ),
+          const SizedBox(height: 16),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AgregarEquipoScreen(),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppTheme.primaryGradient,
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
+              ),
             ),
-          ).then((_) => setState(() {}));
-        },
-        backgroundColor: const Color(0xFF0D47A1),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+            const SizedBox(height: 24),
+            const Text(
+              'Cargando inventario...',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-        child: const Icon(Icons.add, size: 28),
-        elevation: 4,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inventory_2_outlined,
+                size: 64,
+                color: AppTheme.textMuted,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'No se encontraron equipos',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Intenta cambiar los filtros de búsqueda\no agrega un nuevo equipo',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _navigateToAdd,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Agregar Equipo'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentBlue,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   List<Equipo> _getEquiposFiltrados() {
-    List<Equipo> equipos = _inventarioProvider.equipos;
+    List<Equipo> equipos = _equipos;
 
-    // Filtrar por oficina
     if (_filtroOficina != 'Todas') {
       equipos = equipos.where((e) => e.oficina == _filtroOficina).toList();
     }
 
-    // Filtrar por búsqueda
     if (_searchQuery.isNotEmpty) {
       equipos = equipos.where((equipo) {
         return equipo.oficina
@@ -251,35 +699,90 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return equipos;
   }
 
-  void _mostrarBusqueda() {
+  void _navigateToDetail(Equipo equipo) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            DetalleEquipoScreen(
+          equipo: equipo,
+          isAdmin: true,
+          onEditar: () => _navigateToEdit(equipo),
+          onEliminar: () => _eliminarEquipo(equipo),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 200),
+      ),
+    );
+  }
+
+  void _navigateToEdit(Equipo equipo) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AgregarEquipoScreen(equipo: equipo),
+      ),
+    ).then((_) => _cargarDatos());
+  }
+
+  void _navigateToAdd() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AgregarEquipoScreen(),
+      ),
+    ).then((_) => _cargarDatos());
+  }
+
+  void _logout() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Buscar Equipos'),
-        content: TextField(
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
-          decoration: const InputDecoration(
-            hintText: 'Buscar por oficina, tipo, procesador...',
-            prefixIcon: Icon(Icons.search),
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.errorRed.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: AppTheme.errorRed,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Cerrar Sesión'),
+          ],
+        ),
+        content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
         actions: [
           TextButton(
-            onPressed: () {
-              setState(() {
-                _searchQuery = '';
-              });
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: const Text('Cancelar'),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Aceptar'),
+          ElevatedButton(
+            onPressed: () {
+              _apiService.logout();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cerrar Sesión'),
           ),
         ],
       ),
@@ -290,31 +793,62 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar Equipo'),
-        content:
-            Text('¿Está seguro de eliminar el equipo de ${equipo.oficina}?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.errorRed.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.delete_rounded,
+                color: AppTheme.errorRed,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Eliminar Equipo'),
+          ],
+        ),
+        content: Text(
+          '¿Estás seguro de eliminar el equipo de "${equipo.oficina}"?\n\nEsta acción no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: TextStyle(color: Colors.grey[600])),
+            child: const Text('Cancelar'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              _inventarioProvider.eliminarEquipo(equipo.id);
               Navigator.pop(context);
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Equipo eliminado exitosamente'),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              _eliminarEquipo(equipo);
             },
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _eliminarEquipo(Equipo equipo) async {
+    if (equipo.id == null) return;
+
+    final result = await _apiService.eliminarEquipo(equipo.id!);
+
+    if (mounted) {
+      if (result['success'] == true) {
+        _showSuccessSnackbar('Equipo eliminado exitosamente');
+        _cargarDatos();
+      } else {
+        _showErrorSnackbar(result['message'] ?? 'Error al eliminar');
+      }
+    }
   }
 }

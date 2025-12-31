@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/equipo.dart';
-import '../providers/inventario_provider.dart';
+import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class AgregarEquipoScreen extends StatefulWidget {
   final Equipo? equipo;
@@ -8,213 +10,213 @@ class AgregarEquipoScreen extends StatefulWidget {
   const AgregarEquipoScreen({super.key, this.equipo});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _AgregarEquipoScreenState createState() => _AgregarEquipoScreenState();
+  State<AgregarEquipoScreen> createState() => _AgregarEquipoScreenState();
 }
 
-class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
+class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _numeroController = TextEditingController();
-  final _monitorController = TextEditingController();
-  final _impresorasController = TextEditingController();
-  final _ipController = TextEditingController();
+  final ApiService _apiService = ApiService();
+  bool _isLoading = false;
 
+  // Controladores para campos de texto libre
+  late TextEditingController _numeroController;
+  late TextEditingController _microprocesadorController;
+  late TextEditingController _monitorController;
+  late TextEditingController _impresorasController;
+  late TextEditingController _ipController;
+
+  // Valores para dropdowns
   String _tipoSeleccionado = 'PC';
-  String _estadoSeleccionado = 'BUENO';
-  String _sedeSeleccionada = 'PRINCIPAL';
-  String _escanerSeleccionado = 'NO';
-  String _microprocesadorSeleccionado = 'Intel Core i3';
-  String _sistemaOperativoSeleccionado = 'Windows 10';
+  String _estadoSeleccionado = 'Bueno';
+  String _oficinaSeleccionada = 'Informática';
+  String _sistemaOperativoSeleccionado = 'Windows 11 Pro';
   String _marcaSeleccionada = 'HP';
   String _memoriaRAMSeleccionada = '8 GB';
   String _discoDuroSeleccionado = '500 GB HDD';
-  String _oficinaSeleccionada = 'CATASTRO';
+  String _sedeSeleccionada = 'PRINCIPAL';
+  String _escanerSeleccionado = 'NO';
 
-  final List<String> _tipos = ['PC', 'LAPTOP', 'SERVIDOR'];
-  final List<String> _estados = ['BUENO', 'REGULAR', 'MALO'];
-  final List<String> _sedes = ['PRINCIPAL', 'SUCURSAL'];
-  final List<String> _escaneres = ['SI', 'NO'];
+  // Opciones para dropdowns
+  final List<String> _tipos = ['PC', 'Laptop', 'Servidor', 'Impresora'];
+  final List<String> _estados = ['Bueno', 'Regular', 'Malo'];
 
-  // Lista de procesadores actualizados
-  final List<String> _microprocesadores = [
-    'Intel Core i3',
-    'Intel Core i5',
-    'Intel Core i7',
-    'Intel Core i9',
-    'Intel Xeon',
-    'AMD Ryzen 3',
-    'AMD Ryzen 5',
-    'AMD Ryzen 7',
-    'AMD Ryzen 9',
-    'AMD EPYC',
-    'Apple M1',
-    'Apple M2',
-    'Apple M3',
-    'Otro'
+  final List<String> _oficinas = [
+    'Abastecimiento',
+    'Alcaldía',
+    'ATM (Área Técnica Municipal)',
+    'Caja',
+    'Contabilidad',
+    'DEMUNA',
+    'Desarrollo Urbano',
+    'Gerencia Municipal',
+    'Imagen Institucional',
+    'Informática',
+    'Infraestructura',
+    'Mantenimiento de Maquinaria',
+    'Mesa de Partes',
+    'Obras',
+    'Oficina de Enlace',
+    'Planificación y Presupuesto',
+    'Programas Sociales (PVL)',
+    'Registro Civil',
+    'Secretaría General',
+    'Tesorería',
+    'Unidad Formuladora',
   ];
 
-  // Lista de sistemas operativos
   final List<String> _sistemasOperativos = [
-    'Windows 10',
-    'Windows 11',
-    'Windows 8.1',
-    'Windows 7',
-    'Linux Ubuntu',
-    'Linux Debian',
-    'Linux CentOS',
-    'macOS',
-    'Sin Sistema Operativo'
+    'Windows 11 Pro',
+    'Windows 11 Home',
+    'Windows 10 Pro',
+    'Windows 10 Home',
+    'Windows Server 2022',
+    'Windows Server 2019',
+    'Windows Server 2016',
+    'Ubuntu Server 22.04',
+    'Ubuntu Server 20.04',
+    'Ubuntu Desktop 22.04',
+    'macOS Ventura',
+    'macOS Sonoma',
+    'Linux (Otro)',
+    'Otro',
   ];
 
-  // Lista de marcas
   final List<String> _marcas = [
     'HP',
     'Dell',
     'Lenovo',
-    'Apple',
-    'Asus',
+    'ASUS',
     'Acer',
+    'Apple',
+    'Samsung',
+    'MSI',
     'Toshiba',
     'Sony',
-    'Samsung',
-    'Otro'
+    'LG',
+    'DELL EMC',
+    'Ensamblado',
+    'Otra',
   ];
 
-  // Lista de memorias RAM
   final List<String> _memoriasRAM = [
     '2 GB',
     '4 GB',
     '8 GB',
+    '12 GB',
     '16 GB',
+    '24 GB',
     '32 GB',
+    '48 GB',
     '64 GB',
-    '128 GB'
+    '128 GB',
   ];
 
-  // Lista de discos duros - CORREGIDO: agregado '500 GB HDD'
   final List<String> _discosDuros = [
     '128 GB SSD',
     '256 GB SSD',
-    '500 GB HDD', // Agregado este valor
     '512 GB SSD',
-    '1 TB HDD',
     '1 TB SSD',
-    '2 TB HDD',
     '2 TB SSD',
+    '250 GB HDD',
+    '500 GB HDD',
+    '1 TB HDD',
+    '2 TB HDD',
     '4 TB HDD',
-    '4 TB SSD'
+    '1 TB SAS',
+    '2 TB SAS',
+    '4 TB SAS RAID',
+    'Otro',
   ];
 
-  final List<String> _oficinas = [
-    'CATASTRO',
-    'PROCURADURÍA PÚBLICA MUNICIPAL',
-    'ASESORIA JURIDICA',
-    'INFRAESTRUCTURA',
-    'PAD',
-    'RECURSOS HUMANOS',
-    'ABASTECIMIENTO',
-    'PROGRAMA VASO DE LECHE (PVL)',
-    'PATRIMONIO',
-    'SUPERVISIÓN Y LIQUIDACIÓN',
-    'UNIDAD DE TESORERIA Y CAJA',
-    'TRANSPORTE',
-    'SERVICIOS Y PROGRAMA SOCIAL',
-    'DESARROLLO ECONOMICO SOCIAL',
-    'CONTABILIDAD Y ADMINIST',
-    'PRESUPUESTO',
-    'ADMINISTRACIÓN',
-    'DEMUNA',
-    'DEFENSA CIVIL',
-    'IMAGEN',
-    'RENTA',
-    'MESA DE PARTES',
-    'ADMINISTRACIÓN TRIBUTARIA',
-    'COACTIVO',
-    'SERVICIOS MUNICIPALES',
-    'SIAM',
-    'OMAPED',
-    'SISFO',
-    'CAJA',
-    'ARCHIVOS',
-    'REGISTRO CIVIL',
-    'SECRETARIA GENERAL',
-    'GERENCIA GENERAL',
-    'OFICINA DE IMAGEN INSTITUCIONAL',
-    'AREA DE INFORMATICA',
+  final List<String> _sedes = [
+    'PRINCIPAL',
+    'SUCURSAL',
   ];
 
-  final InventarioProvider _inventarioProvider = InventarioProvider();
+  final List<String> _escanerOpciones = ['SI', 'NO'];
+
+  // Animación
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  bool get _isEditing => widget.equipo != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.equipo != null) {
-      _cargarDatosEquipo();
+    _initControllers();
+    _initAnimations();
+  }
+
+  void _initControllers() {
+    final equipo = widget.equipo;
+
+    // Controladores de texto libre
+    _numeroController = TextEditingController(text: equipo?.numero ?? '');
+    _microprocesadorController =
+        TextEditingController(text: equipo?.microprocesador ?? '');
+    _monitorController = TextEditingController(text: equipo?.monitor ?? '');
+    _impresorasController =
+        TextEditingController(text: equipo?.impresoras ?? '');
+    _ipController = TextEditingController(text: equipo?.ip ?? '');
+
+    // Inicializar dropdowns si estamos editando
+    if (equipo != null) {
+      _tipoSeleccionado = equipo.tipo;
+      _estadoSeleccionado = equipo.estado;
+      _oficinaSeleccionada =
+          _oficinas.contains(equipo.oficina) ? equipo.oficina : 'OTRO';
+      _sistemaOperativoSeleccionado =
+          _sistemasOperativos.contains(equipo.sistemaOperativo)
+              ? equipo.sistemaOperativo
+              : 'Otro';
+      _marcaSeleccionada =
+          _marcas.contains(equipo.marca) ? equipo.marca : 'Otra';
+      _memoriaRAMSeleccionada =
+          _memoriasRAM.contains(equipo.memoriaRAM) ? equipo.memoriaRAM : '8 GB';
+      _discoDuroSeleccionado =
+          _discosDuros.contains(equipo.discoDuro) ? equipo.discoDuro : 'Otro';
+      _sedeSeleccionada =
+          _sedes.contains(equipo.sede) ? equipo.sede : 'PRINCIPAL';
+      _escanerSeleccionado = equipo.escaner.toUpperCase() == 'SI' ? 'SI' : 'NO';
     }
   }
 
-  void _cargarDatosEquipo() {
-    final equipo = widget.equipo!;
-    _numeroController.text = equipo.numero;
-    _oficinaSeleccionada = equipo.oficina;
-    _tipoSeleccionado = equipo.tipo;
-    _microprocesadorSeleccionado = equipo.microprocesador;
-    _sistemaOperativoSeleccionado = equipo.sistemaOperativo;
-    _marcaSeleccionada = equipo.marca;
-    _memoriaRAMSeleccionada = equipo.memoriaRAM;
-    _discoDuroSeleccionado = equipo.discoDuro;
-    _estadoSeleccionado = equipo.estado;
-    _monitorController.text = equipo.monitor;
-    _sedeSeleccionada = equipo.sede;
-    _escanerSeleccionado = equipo.escaner;
-    _impresorasController.text = equipo.impresoras;
-    _ipController.text = equipo.ip;
-
-    // Validar que los valores existan en las listas
-    _validarYCorregirValores();
+  void _initAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+    _animationController.forward();
   }
 
-  void _validarYCorregirValores() {
-    // Validar microprocesador
-    if (!_microprocesadores.contains(_microprocesadorSeleccionado)) {
-      _microprocesadorSeleccionado = 'Intel Core i3';
-    }
-
-    // Validar sistema operativo
-    if (!_sistemasOperativos.contains(_sistemaOperativoSeleccionado)) {
-      _sistemaOperativoSeleccionado = 'Windows 10';
-    }
-
-    // Validar marca
-    if (!_marcas.contains(_marcaSeleccionada)) {
-      _marcaSeleccionada = 'HP';
-    }
-
-    // Validar memoria RAM
-    if (!_memoriasRAM.contains(_memoriaRAMSeleccionada)) {
-      _memoriaRAMSeleccionada = '8 GB';
-    }
-
-    // Validar disco duro
-    if (!_discosDuros.contains(_discoDuroSeleccionado)) {
-      _discoDuroSeleccionado = '500 GB HDD';
-    }
-
-    // Validar oficina
-    if (!_oficinas.contains(_oficinaSeleccionada)) {
-      _oficinaSeleccionada = 'CATASTRO';
-    }
+  @override
+  void dispose() {
+    _numeroController.dispose();
+    _microprocesadorController.dispose();
+    _monitorController.dispose();
+    _impresorasController.dispose();
+    _ipController.dispose();
+    _animationController.dispose();
+    super.dispose();
   }
 
-  void _guardarEquipo() {
+  Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isLoading = true);
+
     final equipo = Equipo(
-      id: widget.equipo?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.equipo?.id,
       numero: _numeroController.text,
       oficina: _oficinaSeleccionada,
       tipo: _tipoSeleccionado,
-      microprocesador: _microprocesadorSeleccionado,
+      microprocesador: _microprocesadorController.text,
       sistemaOperativo: _sistemaOperativoSeleccionado,
       marca: _marcaSeleccionada,
       memoriaRAM: _memoriaRAMSeleccionada,
@@ -227,241 +229,415 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
       ip: _ipController.text,
     );
 
-    if (widget.equipo == null) {
-      _inventarioProvider.agregarEquipo(equipo);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Equipo agregado exitosamente'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } else {
-      _inventarioProvider.editarEquipo(equipo.id, equipo);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Equipo actualizado exitosamente'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    try {
+      Map<String, dynamic> result;
 
-    Navigator.pop(context);
+      if (_isEditing && widget.equipo?.id != null) {
+        result = await _apiService.actualizarEquipo(widget.equipo!.id!, equipo);
+      } else {
+        result = await _apiService.crearEquipo(equipo);
+      }
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        _showSuccessSnackbar(_isEditing
+            ? 'Equipo actualizado correctamente'
+            : 'Equipo guardado correctamente');
+        Navigator.pop(context);
+      } else {
+        _showErrorSnackbar(result['message'] ?? 'Error al guardar');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar('Error: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme.successGreen,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme.errorRed,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: Text(
-          widget.equipo == null ? '➕ Agregar Equipo' : '✏️ Editar Equipo',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: const Color(0xFF0D47A1),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save_outlined),
-            onPressed: _guardarEquipo,
-            tooltip: 'Guardar',
+      backgroundColor: AppTheme.surfaceLight,
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(),
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Información básica
+                      _buildSection(
+                        icon: Icons.info_rounded,
+                        title: 'Información Básica',
+                        color: AppTheme.accentBlue,
+                        children: [
+                          _buildTextField(
+                            controller: _numeroController,
+                            label: 'Número de Inventario',
+                            icon: Icons.tag_rounded,
+                            required: true,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDropdown(
+                            label: 'Oficina',
+                            value: _oficinaSeleccionada,
+                            items: _oficinas,
+                            onChanged: (value) {
+                              setState(() => _oficinaSeleccionada = value!);
+                            },
+                            icon: Icons.business_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDropdown(
+                                  label: 'Tipo',
+                                  value: _tipoSeleccionado,
+                                  items: _tipos,
+                                  onChanged: (value) {
+                                    setState(() => _tipoSeleccionado = value!);
+                                  },
+                                  icon: Icons.devices_rounded,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildDropdown(
+                                  label: 'Estado',
+                                  value: _estadoSeleccionado,
+                                  items: _estados,
+                                  onChanged: (value) {
+                                    setState(
+                                        () => _estadoSeleccionado = value!);
+                                  },
+                                  icon: Icons.health_and_safety_rounded,
+                                  getItemColor: _getEstadoColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Especificaciones técnicas
+                      _buildSection(
+                        icon: Icons.memory_rounded,
+                        title: 'Especificaciones Técnicas',
+                        color: AppTheme.infoPurple,
+                        children: [
+                          _buildTextField(
+                            controller: _microprocesadorController,
+                            label: 'Microprocesador',
+                            icon: Icons.developer_board_rounded,
+                            hint: 'Ej: Intel Core i7-12700 2.1GHz',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDropdown(
+                            label: 'Sistema Operativo',
+                            value: _sistemaOperativoSeleccionado,
+                            items: _sistemasOperativos,
+                            onChanged: (value) {
+                              setState(
+                                  () => _sistemaOperativoSeleccionado = value!);
+                            },
+                            icon: Icons.computer_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDropdown(
+                            label: 'Marca',
+                            value: _marcaSeleccionada,
+                            items: _marcas,
+                            onChanged: (value) {
+                              setState(() => _marcaSeleccionada = value!);
+                            },
+                            icon: Icons.build_rounded,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDropdown(
+                                  label: 'Memoria RAM',
+                                  value: _memoriaRAMSeleccionada,
+                                  items: _memoriasRAM,
+                                  onChanged: (value) {
+                                    setState(
+                                        () => _memoriaRAMSeleccionada = value!);
+                                  },
+                                  icon: Icons.memory_rounded,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildDropdown(
+                                  label: 'Disco Duro',
+                                  value: _discoDuroSeleccionado,
+                                  items: _discosDuros,
+                                  onChanged: (value) {
+                                    setState(
+                                        () => _discoDuroSeleccionado = value!);
+                                  },
+                                  icon: Icons.storage_rounded,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Periféricos
+                      _buildSection(
+                        icon: Icons.devices_other_rounded,
+                        title: 'Periféricos y Red',
+                        color: AppTheme.accentCyan,
+                        children: [
+                          _buildTextField(
+                            controller: _monitorController,
+                            label: 'Monitor',
+                            icon: Icons.monitor_rounded,
+                            hint: 'Ej: HP 24" Full HD',
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDropdown(
+                                  label: 'Escáner',
+                                  value: _escanerSeleccionado,
+                                  items: _escanerOpciones,
+                                  onChanged: (value) {
+                                    setState(
+                                        () => _escanerSeleccionado = value!);
+                                  },
+                                  icon: Icons.scanner_rounded,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildIPTextField(),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _impresorasController,
+                            label: 'Impresoras',
+                            icon: Icons.print_rounded,
+                            hint: 'Ej: HP LaserJet Pro',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Ubicación
+                      _buildSection(
+                        icon: Icons.location_on_rounded,
+                        title: 'Ubicación',
+                        color: AppTheme.warningOrange,
+                        children: [
+                          _buildDropdown(
+                            label: 'Sede',
+                            value: _sedeSeleccionada,
+                            items: _sedes,
+                            onChanged: (value) {
+                              setState(() => _sedeSeleccionada = value!);
+                            },
+                            icon: Icons.location_city_rounded,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+
+                      // Botón Guardar
+                      _buildSaveButton(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Información Básica
-              _buildSectionHeader('📋 Información Básica'),
-              _buildTextField(_numeroController, 'Número',
-                  Icons.confirmation_number_outlined),
-              const SizedBox(height: 16),
-              _buildDropdownField(
-                value: _oficinaSeleccionada,
-                label: 'Oficina',
-                icon: Icons.work_outline,
-                items: _oficinas,
-                onChanged: (value) =>
-                    setState(() => _oficinaSeleccionada = value!),
-              ),
-              const SizedBox(height: 16),
-              _buildDropdownField(
-                value: _tipoSeleccionado,
-                label: 'Tipo de Equipo',
-                icon: Icons.computer_outlined,
-                items: _tipos,
-                onChanged: (value) =>
-                    setState(() => _tipoSeleccionado = value!),
-              ),
+    );
+  }
 
-              // Especificaciones Técnicas
-              const SizedBox(height: 24),
-              _buildSectionHeader('⚙️ Especificaciones Técnicas'),
-              _buildDropdownField(
-                value: _microprocesadorSeleccionado,
-                label: 'Microprocesador',
-                icon: Icons.memory_outlined,
-                items: _microprocesadores,
-                onChanged: (value) =>
-                    setState(() => _microprocesadorSeleccionado = value!),
-              ),
-              const SizedBox(height: 16),
-              _buildDropdownField(
-                value: _sistemaOperativoSeleccionado,
-                label: 'Sistema Operativo',
-                icon: Icons.settings_outlined,
-                items: _sistemasOperativos,
-                onChanged: (value) =>
-                    setState(() => _sistemaOperativoSeleccionado = value!),
-              ),
-              const SizedBox(height: 16),
-              _buildDropdownField(
-                value: _marcaSeleccionada,
-                label: 'Marca',
-                icon: Icons.branding_watermark_outlined,
-                items: _marcas,
-                onChanged: (value) =>
-                    setState(() => _marcaSeleccionada = value!),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdownField(
-                      value: _memoriaRAMSeleccionada,
-                      label: 'Memoria RAM',
-                      icon: Icons.memory_outlined,
-                      items: _memoriasRAM,
-                      onChanged: (value) =>
-                          setState(() => _memoriaRAMSeleccionada = value!),
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: _buildDropdownField(
-                      value: _discoDuroSeleccionado,
-                      label: 'Disco Duro',
-                      icon: Icons.storage_outlined,
-                      items: _discosDuros,
-                      onChanged: (value) =>
-                          setState(() => _discoDuroSeleccionado = value!),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Estado y Ubicación
-              const SizedBox(height: 24),
-              _buildSectionHeader('📍 Estado y Ubicación'),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdownField(
-                      value: _estadoSeleccionado,
-                      label: 'Estado',
-                      icon: Icons.info_outline,
-                      items: _estados,
-                      onChanged: (value) =>
-                          setState(() => _estadoSeleccionado = value!),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildDropdownField(
-                      value: _sedeSeleccionada,
-                      label: 'Sede',
-                      icon: Icons.location_city_outlined,
-                      items: _sedes,
-                      onChanged: (value) =>
-                          setState(() => _sedeSeleccionada = value!),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                  _monitorController, 'Monitor', Icons.monitor_outlined),
-
-              // Periféricos y Red
-              const SizedBox(height: 24),
-              _buildSectionHeader('🖨️ Periféricos y Red'),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdownField(
-                      value: _escanerSeleccionado,
-                      label: 'Escáner',
-                      icon: Icons.scanner_outlined,
-                      items: _escaneres,
-                      onChanged: (value) =>
-                          setState(() => _escanerSeleccionado = value!),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTextField(
-                        _ipController, 'Dirección IP', Icons.language_outlined),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(_impresorasController, 'Impresoras/Periféricos',
-                  Icons.print_outlined),
-
-              // Botón Guardar
-              const SizedBox(height: 32),
-              Container(
-                width: double.infinity,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0D47A1), Color(0xFF1976D2)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0D47A1).withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 120,
+      floating: false,
+      pinned: true,
+      stretch: true,
+      backgroundColor: AppTheme.primaryBlue,
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(38),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      actions: [
+        if (_isLoading)
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
                 ),
-                child: ElevatedButton(
-                  onPressed: _guardarEquipo,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+              ),
+            ),
+          )
+        else
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(38),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child:
+                  const Icon(Icons.save_rounded, color: Colors.white, size: 22),
+            ),
+            onPressed: _guardar,
+          ),
+        const SizedBox(width: 8),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -40,
+                right: -30,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: (_isEditing
+                            ? AppTheme.warningOrange
+                            : AppTheme.successGreen)
+                        .withAlpha(38),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const Icon(Icons.save_outlined, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.equipo == null
-                            ? 'AGREGAR EQUIPO'
-                            : 'ACTUALIZAR EQUIPO',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(38),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _isEditing
+                                  ? Icons.edit_rounded
+                                  : Icons.add_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isEditing ? 'Editar Equipo' : 'Nuevo Equipo',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _isEditing
+                                    ? 'Modificar información del equipo'
+                                    : 'Agregar equipo al inventario',
+                                style: TextStyle(
+                                  color: Colors.white.withAlpha(179),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -469,113 +645,391 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D47A1).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF0D47A1).withOpacity(0.2)),
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF0D47A1),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-      TextEditingController controller, String label, IconData icon) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF0D47A1)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[400]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[400]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0D47A1), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Por favor ingrese $label';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildDropdownField({
-    required String value,
-    required String label,
+  Widget _buildSection({
     required IconData icon,
-    required List<String> items,
-    required Function(String?) onChanged,
+    required String title,
+    required Color color,
+    required List<Widget> children,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[400]!),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: value,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFF0D47A1)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF0D47A1), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(
+          color: color.withAlpha(26),
         ),
-        items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
-        }).toList(),
-        onChanged: onChanged,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Por favor seleccione $label';
-          }
-          return null;
-        },
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  color.withAlpha(20),
+                  color.withAlpha(5),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(38),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(children: children),
+          ),
+        ],
       ),
     );
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool required = false,
+    String? hint,
+    TextInputType? keyboardType,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: AppTheme.textPrimary,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        labelStyle: const TextStyle(
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+        hintStyle: TextStyle(
+          color: AppTheme.textMuted.withAlpha(150),
+          fontSize: 13,
+        ),
+        prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppTheme.accentBlue, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppTheme.errorRed, width: 1.5),
+        ),
+        filled: true,
+        fillColor: AppTheme.surfaceLight,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+      validator: required
+          ? (value) {
+              if (value == null || value.isEmpty) {
+                return 'Este campo es requerido';
+              }
+              return null;
+            }
+          : null,
+    );
+  }
+
+  Widget _buildIPTextField() {
+    return TextFormField(
+      controller: _ipController,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        _IPInputFormatter(),
+      ],
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: AppTheme.textPrimary,
+        fontFamily: 'monospace',
+      ),
+      decoration: InputDecoration(
+        labelText: 'Dirección IP',
+        hintText: '192.168.1.1',
+        labelStyle: const TextStyle(
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+        hintStyle: TextStyle(
+          color: AppTheme.textMuted.withAlpha(150),
+          fontSize: 13,
+        ),
+        prefixIcon: const Icon(Icons.language_rounded,
+            color: AppTheme.textSecondary, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppTheme.accentBlue, width: 2),
+        ),
+        filled: true,
+        fillColor: AppTheme.surfaceLight,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+    required IconData icon,
+    Color Function(String)? getItemColor,
+  }) {
+    // Asegurarse de que el valor esté en la lista
+    final safeValue = items.contains(value) ? value : items.first;
+
+    return DropdownButtonFormField<String>(
+      value: safeValue,
+      isExpanded: true,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: AppTheme.textPrimary,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: AppTheme.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppTheme.accentBlue, width: 2),
+        ),
+        filled: true,
+        fillColor: AppTheme.surfaceLight,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      ),
+      icon: const Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: AppTheme.textSecondary,
+      ),
+      dropdownColor: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      menuMaxHeight: 300,
+      items: items.map((String item) {
+        final itemColor = getItemColor?.call(item);
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Row(
+            children: [
+              if (itemColor != null) ...[
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: itemColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  item,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return Container(
+      width: double.infinity,
+      height: 58,
+      decoration: BoxDecoration(
+        gradient: AppTheme.accentGradient,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.accentBlue.withAlpha(77),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isLoading ? null : _guardar,
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _isEditing ? Icons.save_rounded : Icons.add_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _isEditing ? 'Actualizar Equipo' : 'Guardar Equipo',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getEstadoColor(String estado) {
+    switch (estado.toLowerCase()) {
+      case 'bueno':
+        return AppTheme.successGreen;
+      case 'regular':
+        return AppTheme.warningOrange;
+      case 'malo':
+        return AppTheme.errorRed;
+      default:
+        return AppTheme.textMuted;
+    }
+  }
+}
+
+/// Formateador de entrada para direcciones IP
+/// Agrega puntos automáticamente después de cada grupo de hasta 3 dígitos
+class _IPInputFormatter extends TextInputFormatter {
   @override
-  void dispose() {
-    _numeroController.dispose();
-    _monitorController.dispose();
-    _impresorasController.dispose();
-    _ipController.dispose();
-    super.dispose();
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Solo permitir dígitos y puntos
+    String text = newValue.text.replaceAll(RegExp(r'[^\d.]'), '');
+
+    // Si el usuario está borrando, permitir
+    if (newValue.text.length < oldValue.text.length) {
+      return newValue.copyWith(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+
+    // Remover puntos para procesar
+    String digitsOnly = text.replaceAll('.', '');
+
+    // Limitar a 12 dígitos (4 grupos de 3)
+    if (digitsOnly.length > 12) {
+      digitsOnly = digitsOnly.substring(0, 12);
+    }
+
+    // Construir IP con puntos
+    StringBuffer result = StringBuffer();
+    int groupCount = 0;
+    int digitCount = 0;
+
+    for (int i = 0; i < digitsOnly.length; i++) {
+      // Agregar dígito
+      result.write(digitsOnly[i]);
+      digitCount++;
+
+      // Si hemos escrito 3 dígitos y no estamos en el último grupo
+      if (digitCount == 3 && groupCount < 3 && i < digitsOnly.length - 1) {
+        result.write('.');
+        groupCount++;
+        digitCount = 0;
+      }
+      // Si el siguiente carácter comienza un nuevo grupo después de menos de 3 dígitos
+      // (porque el valor del octeto es menor a lo que permite 3 dígitos)
+    }
+
+    String formatted = result.toString();
+
+    // Validar que no haya más de 4 grupos
+    List<String> parts = formatted.split('.');
+    if (parts.length > 4) {
+      formatted = parts.sublist(0, 4).join('.');
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }

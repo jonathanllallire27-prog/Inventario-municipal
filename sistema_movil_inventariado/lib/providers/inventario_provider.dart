@@ -11,6 +11,7 @@ class InventarioProvider with ChangeNotifier {
   List<Equipo> _equipos = [];
   bool _isAdmin = false;
   String _usuarioActual = '';
+  int _nextId = 200;
 
   List<Equipo> get equipos => _equipos;
   bool get isAdmin => _isAdmin;
@@ -19,13 +20,13 @@ class InventarioProvider with ChangeNotifier {
   void _cargarDatosIniciales() {
     _equipos = [
       Equipo(
-        id: '1',
+        id: 1,
         numero: '1',
         oficina: 'CATASTRO',
         tipo: 'PC',
-        microprocesador: 'Intel® Core™ i9 -14900 3.2 GHz',
-        sistemaOperativo: 'Windows 11 Pro',
-        marca: 'FURY',
+        microprocesador: 'Intel Core i9',
+        sistemaOperativo: 'Windows 11',
+        marca: 'HP',
         memoriaRAM: '32 GB',
         discoDuro: '1 TB SSD',
         estado: 'BUENO',
@@ -36,15 +37,15 @@ class InventarioProvider with ChangeNotifier {
         ip: '182.18.8.44',
       ),
       Equipo(
-        id: '2',
+        id: 2,
         numero: '2',
         oficina: 'CATASTRO',
         tipo: 'PC',
-        microprocesador: 'Intel® Core™ i7 -8700 3.2GHz',
-        sistemaOperativo: 'Windows 10 Pro',
-        marca: 'Antrix',
+        microprocesador: 'Intel Core i7',
+        sistemaOperativo: 'Windows 10',
+        marca: 'Dell',
         memoriaRAM: '16 GB',
-        discoDuro: '930 GB HDD',
+        discoDuro: '500 GB HDD',
         estado: 'REGULAR',
         monitor: 'LG 24"',
         sede: 'PRINCIPAL',
@@ -53,15 +54,15 @@ class InventarioProvider with ChangeNotifier {
         ip: '182.18.8.204',
       ),
       Equipo(
-        id: '3',
+        id: 3,
         numero: '3',
         oficina: 'CATASTRO',
         tipo: 'PC',
-        microprocesador: 'Intel® Core™ i7-13700 2.1GHz',
-        sistemaOperativo: 'Windows 11 Pro',
-        marca: 'ALLWIYA',
+        microprocesador: 'Intel Core i7',
+        sistemaOperativo: 'Windows 11',
+        marca: 'Lenovo',
         memoriaRAM: '32 GB',
-        discoDuro: '1.5 TB HDD',
+        discoDuro: '1 TB HDD',
         estado: 'REGULAR',
         monitor: 'SAMSUNG 32"',
         sede: 'PRINCIPAL',
@@ -70,15 +71,15 @@ class InventarioProvider with ChangeNotifier {
         ip: '182.18.8.156',
       ),
       Equipo(
-        id: '35',
+        id: 35,
         numero: '35',
         oficina: 'INFRAESTRUCTURA',
         tipo: 'LAPTOP',
-        microprocesador: 'Intel® Core™ i9-13900 2.00GHz',
-        sistemaOperativo: 'Windows 11 Pro',
-        marca: 'HP OMEN',
+        microprocesador: 'Intel Core i9',
+        sistemaOperativo: 'Windows 11',
+        marca: 'HP',
         memoriaRAM: '32 GB',
-        discoDuro: '950 GB SSD',
+        discoDuro: '512 GB SSD',
         estado: 'BUENO',
         monitor: 'LG 15.6"',
         sede: 'PRINCIPAL',
@@ -87,15 +88,15 @@ class InventarioProvider with ChangeNotifier {
         ip: '182.18.8.120',
       ),
       Equipo(
-        id: '176',
+        id: 176,
         numero: '176',
         oficina: 'AREA DE INFORMATICA',
         tipo: 'SERVIDOR',
-        microprocesador: 'Intel(R) xeon(R) Silver 4208 CPU@ 2.1 Ghz',
-        sistemaOperativo: 'Windows Server 2016',
-        marca: 'DELLEMC',
+        microprocesador: 'Intel Xeon',
+        sistemaOperativo: 'Windows 10',
+        marca: 'Dell',
         memoriaRAM: '32 GB',
-        discoDuro: '1 TB SAS',
+        discoDuro: '1 TB SSD',
         estado: 'BUENO',
         monitor: 'SAMSUNG 22"',
         sede: 'PRINCIPAL',
@@ -126,11 +127,28 @@ class InventarioProvider with ChangeNotifier {
   }
 
   void agregarEquipo(Equipo equipo) {
-    _equipos.add(equipo);
+    final nuevoEquipo = Equipo(
+      id: _nextId++,
+      numero: equipo.numero,
+      oficina: equipo.oficina,
+      tipo: equipo.tipo,
+      microprocesador: equipo.microprocesador,
+      sistemaOperativo: equipo.sistemaOperativo,
+      marca: equipo.marca,
+      memoriaRAM: equipo.memoriaRAM,
+      discoDuro: equipo.discoDuro,
+      estado: equipo.estado,
+      monitor: equipo.monitor,
+      sede: equipo.sede,
+      escaner: equipo.escaner,
+      impresoras: equipo.impresoras,
+      ip: equipo.ip,
+    );
+    _equipos.add(nuevoEquipo);
     notifyListeners();
   }
 
-  void editarEquipo(String id, Equipo equipoActualizado) {
+  void editarEquipo(int id, Equipo equipoActualizado) {
     final index = _equipos.indexWhere((equipo) => equipo.id == id);
     if (index != -1) {
       _equipos[index] = equipoActualizado;
@@ -138,7 +156,7 @@ class InventarioProvider with ChangeNotifier {
     }
   }
 
-  void eliminarEquipo(String id) {
+  void eliminarEquipo(int id) {
     _equipos.removeWhere((equipo) => equipo.id == id);
     notifyListeners();
   }
