@@ -144,7 +144,7 @@ import 'services/api_service.dart';
 
 // Configurar la URL base según el entorno:
 // - Emulador Android: 10.0.2.2:3000
-// - Dispositivo físico: IP de tu PC (ej: 182.18.8.7:3000)
+// - Dispositivo físico: IP de tu PC (ej: 182.18.8.176:3000)
 // - iOS Simulator: localhost:3000
 ```
 

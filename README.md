@@ -87,7 +87,7 @@ Este proyecto permite la gestión, seguimiento y auditoría de equipos informát
    ```
 3. Configurar la URL de conexión:
    - Abre `lib/services/api_service.dart`.
-   - Actualiza la variable `baseUrl` con la dirección IP de tu servidor backend (ej. `http://182.18.8.7:3000/api`).
+   - Actualiza la variable `baseUrl` con la dirección IP de tu servidor backend (ej. `http://182.18.8.176:3000/api`).
 4. Ejecutar la aplicación:
    ```bash
    flutter run
