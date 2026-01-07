@@ -8,6 +8,7 @@ import '../widgets/stats_card.dart';
 import 'agregar_equipo_screen.dart';
 import 'detalle_equipo_screen.dart';
 import 'login_screen.dart';
+import 'reportes_pdf_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -20,6 +21,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   String _filtroOficina = 'Todas';
+  String _filtroTipo = 'Todos';
+  String _filtroEstado = 'Todos';
   String _searchQuery = '';
   bool _isSearching = false;
 
@@ -27,6 +30,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
   Map<String, int> _estadisticas = {};
   List<String> _oficinas = [];
   bool _isLoading = true;
+
+  final List<String> _tipos = [
+    'Todos',
+    'PC',
+    'LAPTOP',
+    'SERVIDOR',
+    'IMPRESORA'
+  ];
+  final List<String> _estados = ['Todos', 'BUENO', 'REGULAR', 'MALO'];
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -359,6 +371,32 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
           offset: const Offset(0, 50),
           itemBuilder: (context) => [
             PopupMenuItem(
+              value: 'reportes',
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.picture_as_pdf_rounded,
+                      color: AppTheme.accentBlue,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Reportes PDF',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
               value: 'logout',
               child: Row(
                 children: [
@@ -386,7 +424,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
             ),
           ],
           onSelected: (value) {
-            if (value == 'logout') {
+            if (value == 'reportes') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ReportesPdfScreen(),
+                ),
+              );
+            } else if (value == 'logout') {
               _logout();
             }
           },
@@ -518,6 +563,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Título y contador
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -529,57 +575,151 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
                   color: AppTheme.textPrimary,
                 ),
               ),
-
-              // Dropdown de filtro
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                  ),
-                  boxShadow: AppTheme.subtleShadow,
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: oficinas.contains(_filtroOficina)
-                        ? _filtroOficina
-                        : 'Todas',
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: AppTheme.textSecondary,
-                    ),
-                    isDense: true,
-                    items: oficinas.map((String oficina) {
-                      return DropdownMenuItem<String>(
-                        value: oficina,
-                        child: Text(
-                          oficina.length > 20
-                              ? '${oficina.substring(0, 20)}...'
-                              : oficina,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _filtroOficina = newValue!;
-                      });
-                    },
+              // Botón para limpiar filtros
+              if (_filtroOficina != 'Todas' ||
+                  _filtroTipo != 'Todos' ||
+                  _filtroEstado != 'Todos')
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _filtroOficina = 'Todas';
+                      _filtroTipo = 'Todos';
+                      _filtroEstado = 'Todos';
+                    });
+                  },
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text('Limpiar'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.accentBlue,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
                 ),
-              ),
             ],
+          ),
+          const SizedBox(height: 12),
+
+          // Fila de filtros
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                // Filtro por Oficina
+                _buildFilterDropdown(
+                  label: 'Oficina',
+                  value: oficinas.contains(_filtroOficina)
+                      ? _filtroOficina
+                      : 'Todas',
+                  items: oficinas,
+                  onChanged: (value) => setState(() => _filtroOficina = value!),
+                  icon: Icons.business_rounded,
+                  width: 150,
+                ),
+                const SizedBox(width: 10),
+
+                // Filtro por Tipo
+                _buildFilterDropdown(
+                  label: 'Tipo',
+                  value: _filtroTipo,
+                  items: _tipos,
+                  onChanged: (value) => setState(() => _filtroTipo = value!),
+                  icon: Icons.devices_rounded,
+                  width: 120,
+                ),
+                const SizedBox(width: 10),
+
+                // Filtro por Estado
+                _buildFilterDropdown(
+                  label: 'Estado',
+                  value: _filtroEstado,
+                  items: _estados,
+                  onChanged: (value) => setState(() => _filtroEstado = value!),
+                  icon: Icons.health_and_safety_rounded,
+                  width: 120,
+                  getItemColor: _getEstadoColor,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
         ],
       ),
     );
+  }
+
+  Widget _buildFilterDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+    required IconData icon,
+    required double width,
+    Color Function(String)? getItemColor,
+  }) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: AppTheme.subtleShadow,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: items.contains(value) ? value : items.first,
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppTheme.textSecondary,
+            size: 20,
+          ),
+          isDense: true,
+          isExpanded: true,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Row(
+                children: [
+                  if (getItemColor != null && item != 'Todos')
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(right: 6),
+                      decoration: BoxDecoration(
+                        color: getItemColor(item),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  Expanded(
+                    child: Text(
+                      item.length > 15 ? '${item.substring(0, 15)}...' : item,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
+  Color _getEstadoColor(String estado) {
+    switch (estado.toUpperCase()) {
+      case 'BUENO':
+        return AppTheme.successGreen;
+      case 'REGULAR':
+        return AppTheme.warningOrange;
+      case 'MALO':
+        return AppTheme.errorRed;
+      default:
+        return AppTheme.textMuted;
+    }
   }
 
   Widget _buildLoadingState() {
@@ -679,10 +819,25 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
   List<Equipo> _getEquiposFiltrados() {
     List<Equipo> equipos = _equipos;
 
+    // Filtro por oficina
     if (_filtroOficina != 'Todas') {
       equipos = equipos.where((e) => e.oficina == _filtroOficina).toList();
     }
 
+    // Filtro por tipo
+    if (_filtroTipo != 'Todos') {
+      equipos =
+          equipos.where((e) => e.tipo.toUpperCase() == _filtroTipo).toList();
+    }
+
+    // Filtro por estado
+    if (_filtroEstado != 'Todos') {
+      equipos = equipos
+          .where((e) => e.estado.toUpperCase() == _filtroEstado)
+          .toList();
+    }
+
+    // Búsqueda por texto
     if (_searchQuery.isNotEmpty) {
       equipos = equipos.where((equipo) {
         return equipo.oficina
@@ -692,7 +847,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
             equipo.microprocesador
                 .toLowerCase()
                 .contains(_searchQuery.toLowerCase()) ||
-            equipo.marca.toLowerCase().contains(_searchQuery.toLowerCase());
+            equipo.marca.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            equipo.numero.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            equipo.ip.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
@@ -718,25 +875,33 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
         },
         transitionDuration: const Duration(milliseconds: 200),
       ),
-    );
+    ).then((_) => _cargarDatos()); // Refrescar al volver del detalle
   }
 
-  void _navigateToEdit(Equipo equipo) {
-    Navigator.push(
+  void _navigateToEdit(Equipo equipo) async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => AgregarEquipoScreen(equipo: equipo),
       ),
-    ).then((_) => _cargarDatos());
+    );
+    // Si hubo cambios, recargar los datos
+    if (result == true) {
+      _cargarDatos();
+    }
   }
 
-  void _navigateToAdd() {
-    Navigator.push(
+  void _navigateToAdd() async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => const AgregarEquipoScreen(),
       ),
-    ).then((_) => _cargarDatos());
+    );
+    // Si se creó un equipo, recargar los datos
+    if (result == true) {
+      _cargarDatos();
+    }
   }
 
   void _logout() {

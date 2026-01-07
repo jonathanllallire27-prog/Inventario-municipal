@@ -23,7 +23,7 @@ const initDatabase = async () => {
         id SERIAL PRIMARY KEY,
         numero VARCHAR(20) NOT NULL,
         oficina VARCHAR(100) NOT NULL,
-        tipo VARCHAR(50) NOT NULL CHECK (tipo IN ('PC', 'LAPTOP', 'SERVIDOR')),
+        tipo VARCHAR(50) NOT NULL CHECK (tipo IN ('PC', 'LAPTOP', 'SERVIDOR', 'IMPRESORA')),
         microprocesador VARCHAR(100),
         sistema_operativo VARCHAR(100),
         marca VARCHAR(100),

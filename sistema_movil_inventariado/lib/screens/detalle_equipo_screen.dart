@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/equipo.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import 'agregar_equipo_screen.dart';
 
@@ -28,9 +29,15 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
+  // Equipo mutable para poder actualizarlo
+  late Equipo _equipo;
+  final ApiService _apiService = ApiService();
+
   @override
   void initState() {
     super.initState();
+    _equipo = widget.equipo; // Inicializar con el equipo pasado
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -50,6 +57,41 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
   }
 
   @override
+  void didUpdateWidget(DetalleEquipoScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.equipo != oldWidget.equipo) {
+      _equipo = widget.equipo;
+    }
+  }
+
+  // Función para recargar el equipo desde la API
+  Future<void> _recargarEquipo() async {
+    if (_equipo.id != null) {
+      final equipoActualizado = await _apiService.getEquipo(_equipo.id!);
+      if (equipoActualizado != null && mounted) {
+        setState(() {
+          _equipo = equipoActualizado;
+        });
+      }
+    }
+  }
+
+  // Función para editar y refrescar los datos
+  Future<void> _editarEquipo() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AgregarEquipoScreen(equipo: _equipo),
+      ),
+    );
+
+    // Si hubo cambios, recargar el equipo
+    if (result == true) {
+      await _recargarEquipo();
+    }
+  }
+
+  @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
@@ -57,8 +99,8 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
 
   @override
   Widget build(BuildContext context) {
-    final tipoColor = AppTheme.getTypeColor(widget.equipo.tipo);
-    final estadoColor = AppTheme.getStatusColor(widget.equipo.estado);
+    final tipoColor = AppTheme.getTypeColor(_equipo.tipo);
+    final estadoColor = AppTheme.getStatusColor(_equipo.estado);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -130,16 +172,7 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
                   child: const Icon(Icons.edit_rounded,
                       color: Colors.white, size: 20),
                 ),
-                onPressed: widget.onEditar ??
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AgregarEquipoScreen(equipo: widget.equipo),
-                        ),
-                      );
-                    },
+                onPressed: _editarEquipo,
               ),
               const SizedBox(width: 8),
             ]
@@ -189,8 +222,8 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
                       Row(
                         children: [
                           _buildBadge(
-                            icon: AppTheme.getTypeIcon(widget.equipo.tipo),
-                            label: widget.equipo.tipo,
+                            icon: AppTheme.getTypeIcon(_equipo.tipo),
+                            label: _equipo.tipo,
                             color: tipoColor,
                           ),
                           const SizedBox(width: 10),
@@ -202,7 +235,7 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
 
                       // Oficina (título principal)
                       Text(
-                        widget.equipo.oficina,
+                        _equipo.oficina,
                         style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
@@ -220,13 +253,13 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
                         children: [
                           _buildHeaderChip(
                             icon: Icons.tag_rounded,
-                            text: 'N° ${widget.equipo.numero}',
+                            text: 'N° ${_equipo.numero}',
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: _buildHeaderChip(
                               icon: Icons.memory_rounded,
-                              text: widget.equipo.microprocesador,
+                              text: _equipo.microprocesador,
                             ),
                           ),
                         ],
@@ -239,21 +272,20 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
                         children: [
                           _buildQuickInfo(
                             icon: Icons.business_rounded,
-                            value: widget.equipo.sede,
+                            value: _equipo.sede,
                             label: 'Sede',
                           ),
                           const SizedBox(width: 24),
                           _buildQuickInfo(
                             icon: Icons.language_rounded,
-                            value: widget.equipo.ip.isEmpty
-                                ? 'No asignada'
-                                : widget.equipo.ip,
+                            value:
+                                _equipo.ip.isEmpty ? 'No asignada' : _equipo.ip,
                             label: 'IP',
                           ),
                           const SizedBox(width: 24),
                           _buildQuickInfo(
                             icon: Icons.scanner_rounded,
-                            value: widget.equipo.escaner,
+                            value: _equipo.escaner,
                             label: 'Escáner',
                           ),
                         ],
@@ -327,7 +359,7 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
           ),
           const SizedBox(width: 6),
           Text(
-            widget.equipo.estado,
+            _equipo.estado,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -411,32 +443,32 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
         _buildSpecRow(
           icon: Icons.developer_board_rounded,
           label: 'Procesador',
-          value: widget.equipo.microprocesador,
+          value: _equipo.microprocesador,
         ),
         _buildSpecRow(
           icon: Icons.computer_rounded,
           label: 'Sistema Operativo',
-          value: widget.equipo.sistemaOperativo,
+          value: _equipo.sistemaOperativo,
         ),
         _buildSpecRow(
           icon: Icons.build_rounded,
           label: 'Marca',
-          value: widget.equipo.marca,
+          value: _equipo.marca,
         ),
         _buildSpecRow(
           icon: Icons.memory_rounded,
           label: 'Memoria RAM',
-          value: widget.equipo.memoriaRAM,
+          value: _equipo.memoriaRAM,
         ),
         _buildSpecRow(
           icon: Icons.storage_rounded,
           label: 'Disco Duro',
-          value: widget.equipo.discoDuro,
+          value: _equipo.discoDuro,
         ),
         _buildSpecRow(
           icon: Icons.monitor_rounded,
           label: 'Monitor',
-          value: widget.equipo.monitor,
+          value: _equipo.monitor,
           isLast: true,
         ),
       ],
@@ -452,19 +484,19 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
         _buildSpecRow(
           icon: Icons.print_rounded,
           label: 'Impresoras',
-          value: widget.equipo.impresoras.isEmpty
+          value: _equipo.impresoras.isEmpty
               ? 'No especificado'
-              : widget.equipo.impresoras,
+              : _equipo.impresoras,
         ),
         _buildSpecRow(
           icon: Icons.scanner_rounded,
           label: 'Escáner',
-          value: widget.equipo.escaner,
+          value: _equipo.escaner,
         ),
         _buildSpecRow(
           icon: Icons.language_rounded,
           label: 'Dirección IP',
-          value: widget.equipo.ip.isEmpty ? 'No asignada' : widget.equipo.ip,
+          value: _equipo.ip.isEmpty ? 'No asignada' : _equipo.ip,
           isLast: true,
         ),
       ],
@@ -480,22 +512,22 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
         _buildSpecRow(
           icon: Icons.business_rounded,
           label: 'Oficina',
-          value: widget.equipo.oficina,
+          value: _equipo.oficina,
         ),
         _buildSpecRow(
           icon: Icons.location_on_rounded,
           label: 'Sede',
-          value: widget.equipo.sede,
+          value: _equipo.sede,
         ),
         _buildSpecRow(
           icon: Icons.category_rounded,
           label: 'Tipo',
-          value: widget.equipo.tipo,
+          value: _equipo.tipo,
         ),
         _buildSpecRow(
           icon: Icons.numbers_rounded,
           label: 'Número',
-          value: widget.equipo.numero,
+          value: _equipo.numero,
           isLast: true,
         ),
       ],
@@ -701,16 +733,7 @@ class _DetalleEquipoScreenState extends State<DetalleEquipoScreen>
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: widget.onEditar ??
-                      () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AgregarEquipoScreen(equipo: widget.equipo),
-                          ),
-                        );
-                      },
+                  onTap: _editarEquipo,
                   borderRadius: BorderRadius.circular(16),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),

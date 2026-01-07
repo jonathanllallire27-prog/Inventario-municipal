@@ -116,6 +116,32 @@ router.get('/oficinas', async (req, res) => {
     }
 });
 
+// GET /api/equipos/siguiente-numero - Obtener el siguiente número de inventario
+router.get('/siguiente-numero', async (req, res) => {
+    try {
+        // Obtener el número más alto y sumarle 1
+        const result = await pool.query(`
+            SELECT COALESCE(MAX(CAST(numero AS INTEGER)), 0) + 1 as siguiente
+            FROM equipos 
+            WHERE numero ~ '^[0-9]+$'
+        `);
+
+        const siguienteNumero = result.rows[0].siguiente || 1;
+
+        res.json({
+            success: true,
+            data: { numero: siguienteNumero.toString() }
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo siguiente número:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
 // GET /api/equipos/:id - Obtener un equipo por ID
 router.get('/:id', async (req, res) => {
     try {
@@ -208,6 +234,8 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        console.log('PUT /api/equipos/:id - Datos recibidos:', req.body);
+        
         const {
             numero,
             oficina,
@@ -272,9 +300,12 @@ router.put('/:id', authMiddleware, adminMiddleware, async (req, res) => {
 
     } catch (error) {
         console.error('Error actualizando equipo:', error);
+        console.error('Detalle:', error.message);
+        console.error('Código:', error.code);
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor'
+            message: `Error: ${error.message || 'Error interno del servidor'}`,
+            code: error.code
         });
     }
 });

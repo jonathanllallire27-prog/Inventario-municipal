@@ -335,7 +335,7 @@ class _LoginScreenState extends State<LoginScreen>
                 });
               },
               icon: Icons.admin_panel_settings_rounded,
-              label: 'Ingresar como Administrador',
+              label: 'Administrador',
             ),
           ],
         ),

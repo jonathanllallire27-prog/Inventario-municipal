@@ -7,6 +7,7 @@ import '../widgets/equipo_card.dart';
 import '../widgets/stats_card.dart';
 import 'detalle_equipo_screen.dart';
 import 'login_screen.dart';
+import 'reportes_pdf_screen.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -287,6 +288,32 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           offset: const Offset(0, 50),
           itemBuilder: (context) => [
             PopupMenuItem(
+              value: 'reportes',
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.picture_as_pdf_rounded,
+                      color: AppTheme.accentBlue,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Reportes PDF',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
               value: 'logout',
               child: Row(
                 children: [
@@ -314,7 +341,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ],
           onSelected: (value) {
-            if (value == 'logout') {
+            if (value == 'reportes') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ReportesPdfScreen(),
+                ),
+              );
+            } else if (value == 'logout') {
               Navigator.pushReplacement(
                 context,
                 PageRouteBuilder(

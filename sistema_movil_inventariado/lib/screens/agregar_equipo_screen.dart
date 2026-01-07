@@ -28,7 +28,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
 
   // Valores para dropdowns
   String _tipoSeleccionado = 'PC';
-  String _estadoSeleccionado = 'Bueno';
+  String _estadoSeleccionado = 'BUENO';
   String _oficinaSeleccionada = 'Informática';
   String _sistemaOperativoSeleccionado = 'Windows 11 Pro';
   String _marcaSeleccionada = 'HP';
@@ -37,9 +37,9 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
   String _sedeSeleccionada = 'PRINCIPAL';
   String _escanerSeleccionado = 'NO';
 
-  // Opciones para dropdowns
-  final List<String> _tipos = ['PC', 'Laptop', 'Servidor', 'Impresora'];
-  final List<String> _estados = ['Bueno', 'Regular', 'Malo'];
+  // Opciones para dropdowns - DEBEN coincidir con los CHECK constraints de PostgreSQL
+  final List<String> _tipos = ['PC', 'LAPTOP', 'SERVIDOR', 'IMPRESORA'];
+  final List<String> _estados = ['BUENO', 'REGULAR', 'MALO'];
 
   final List<String> _oficinas = [
     'Abastecimiento',
@@ -147,6 +147,19 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
     super.initState();
     _initControllers();
     _initAnimations();
+    // Si es un nuevo equipo, cargar el siguiente número de inventario
+    if (!_isEditing) {
+      _cargarSiguienteNumero();
+    }
+  }
+
+  Future<void> _cargarSiguienteNumero() async {
+    final siguienteNumero = await _apiService.getSiguienteNumero();
+    if (mounted) {
+      setState(() {
+        _numeroController.text = siguienteNumero;
+      });
+    }
   }
 
   void _initControllers() {
@@ -163,10 +176,15 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
 
     // Inicializar dropdowns si estamos editando
     if (equipo != null) {
-      _tipoSeleccionado = equipo.tipo;
-      _estadoSeleccionado = equipo.estado;
+      // Convertir tipo y estado a mayúsculas para coincidir con las opciones del dropdown
+      String tipoUpper = equipo.tipo.toUpperCase();
+      String estadoUpper = equipo.estado.toUpperCase();
+
+      _tipoSeleccionado = _tipos.contains(tipoUpper) ? tipoUpper : 'PC';
+      _estadoSeleccionado =
+          _estados.contains(estadoUpper) ? estadoUpper : 'BUENO';
       _oficinaSeleccionada =
-          _oficinas.contains(equipo.oficina) ? equipo.oficina : 'OTRO';
+          _oficinas.contains(equipo.oficina) ? equipo.oficina : _oficinas.first;
       _sistemaOperativoSeleccionado =
           _sistemasOperativos.contains(equipo.sistemaOperativo)
               ? equipo.sistemaOperativo
@@ -215,13 +233,13 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
       id: widget.equipo?.id,
       numero: _numeroController.text,
       oficina: _oficinaSeleccionada,
-      tipo: _tipoSeleccionado,
+      tipo: _tipoSeleccionado.toUpperCase(),
       microprocesador: _microprocesadorController.text,
       sistemaOperativo: _sistemaOperativoSeleccionado,
       marca: _marcaSeleccionada,
       memoriaRAM: _memoriaRAMSeleccionada,
       discoDuro: _discoDuroSeleccionado,
-      estado: _estadoSeleccionado,
+      estado: _estadoSeleccionado.toUpperCase(),
       monitor: _monitorController.text,
       sede: _sedeSeleccionada,
       escaner: _escanerSeleccionado,
@@ -244,7 +262,8 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
         _showSuccessSnackbar(_isEditing
             ? 'Equipo actualizado correctamente'
             : 'Equipo guardado correctamente');
-        Navigator.pop(context);
+        // Devolver true para indicar que hay cambios que refrescar
+        Navigator.pop(context, true);
       } else {
         _showErrorSnackbar(result['message'] ?? 'Error al guardar');
       }
@@ -973,7 +992,7 @@ class _AgregarEquipoScreenState extends State<AgregarEquipoScreen>
 }
 
 /// Formateador de entrada para direcciones IP
-/// Agrega puntos automáticamente después de cada grupo de hasta 3 dígitos
+/// Permite escribir puntos manualmente sin forzar 3 dígitos
 class _IPInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -983,53 +1002,55 @@ class _IPInputFormatter extends TextInputFormatter {
     // Solo permitir dígitos y puntos
     String text = newValue.text.replaceAll(RegExp(r'[^\d.]'), '');
 
-    // Si el usuario está borrando, permitir
-    if (newValue.text.length < oldValue.text.length) {
-      return newValue.copyWith(
-        text: text,
-        selection: TextSelection.collapsed(offset: text.length),
-      );
+    // Evitar puntos consecutivos
+    text = text.replaceAll(RegExp(r'\.+'), '.');
+
+    // Evitar que empiece con punto
+    if (text.startsWith('.')) {
+      text = text.substring(1);
     }
 
-    // Remover puntos para procesar
-    String digitsOnly = text.replaceAll('.', '');
+    // Validar la estructura de la IP
+    List<String> parts = text.split('.');
 
-    // Limitar a 12 dígitos (4 grupos de 3)
-    if (digitsOnly.length > 12) {
-      digitsOnly = digitsOnly.substring(0, 12);
-    }
-
-    // Construir IP con puntos
-    StringBuffer result = StringBuffer();
-    int groupCount = 0;
-    int digitCount = 0;
-
-    for (int i = 0; i < digitsOnly.length; i++) {
-      // Agregar dígito
-      result.write(digitsOnly[i]);
-      digitCount++;
-
-      // Si hemos escrito 3 dígitos y no estamos en el último grupo
-      if (digitCount == 3 && groupCount < 3 && i < digitsOnly.length - 1) {
-        result.write('.');
-        groupCount++;
-        digitCount = 0;
-      }
-      // Si el siguiente carácter comienza un nuevo grupo después de menos de 3 dígitos
-      // (porque el valor del octeto es menor a lo que permite 3 dígitos)
-    }
-
-    String formatted = result.toString();
-
-    // Validar que no haya más de 4 grupos
-    List<String> parts = formatted.split('.');
+    // Limitar a 4 partes máximo
     if (parts.length > 4) {
-      formatted = parts.sublist(0, 4).join('.');
+      parts = parts.sublist(0, 4);
+    }
+
+    // Validar cada parte
+    for (int i = 0; i < parts.length; i++) {
+      String part = parts[i];
+
+      // Limitar cada parte a 3 dígitos
+      if (part.length > 3) {
+        parts[i] = part.substring(0, 3);
+      }
+
+      // Validar que el valor no exceda 255
+      if (part.isNotEmpty) {
+        int? value = int.tryParse(parts[i]);
+        if (value != null && value > 255) {
+          parts[i] = '255';
+        }
+      }
+    }
+
+    // Reconstruir el texto
+    String formatted = parts.join('.');
+
+    // Mantener la posición del cursor correctamente
+    int cursorOffset = formatted.length;
+    if (newValue.selection.baseOffset <= formatted.length) {
+      cursorOffset = newValue.selection.baseOffset;
+      if (cursorOffset > formatted.length) {
+        cursorOffset = formatted.length;
+      }
     }
 
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+      selection: TextSelection.collapsed(offset: cursorOffset),
     );
   }
 }

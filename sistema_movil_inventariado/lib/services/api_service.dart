@@ -190,6 +190,27 @@ class ApiService {
     }
   }
 
+  /// Obtener el siguiente número de inventario disponible
+  Future<String> getSiguienteNumero() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/equipos/siguiente-numero'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data['data']['numero'].toString();
+        }
+      }
+      return '1';
+    } catch (e) {
+      print('Error obteniendo siguiente número: $e');
+      return '1';
+    }
+  }
+
   /// Obtener un equipo por ID
   Future<Equipo?> getEquipo(int id) async {
     try {
@@ -214,11 +235,18 @@ class ApiService {
   /// Crear nuevo equipo
   Future<Map<String, dynamic>> crearEquipo(Equipo equipo) async {
     try {
+      print('Creando nuevo equipo');
+      print('Token: ${_token != null ? "presente" : "ausente"}');
+      print('Datos: ${jsonEncode(equipo.toJson())}');
+
       final response = await http.post(
         Uri.parse('$baseUrl/equipos'),
         headers: _headers,
         body: jsonEncode(equipo.toJson()),
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -227,13 +255,25 @@ class ApiService {
           'success': true,
           'equipo': Equipo.fromJson(data['data']),
         };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'message': 'No autorizado. Inicia sesión como administrador.',
+        };
+      } else if (response.statusCode == 403) {
+        return {
+          'success': false,
+          'message': 'Acceso denegado. Se requieren permisos de administrador.',
+        };
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Error al crear equipo',
+          'message': data['message'] ??
+              'Error al crear equipo (${response.statusCode})',
         };
       }
     } catch (e) {
+      print('Error creando equipo: $e');
       return {
         'success': false,
         'message': 'Error de conexión: $e',
@@ -244,11 +284,18 @@ class ApiService {
   /// Actualizar equipo
   Future<Map<String, dynamic>> actualizarEquipo(int id, Equipo equipo) async {
     try {
+      print('Actualizando equipo ID: $id');
+      print('Token: ${_token != null ? "presente" : "ausente"}');
+      print('Datos: ${jsonEncode(equipo.toJson())}');
+
       final response = await http.put(
         Uri.parse('$baseUrl/equipos/$id'),
         headers: _headers,
         body: jsonEncode(equipo.toJson()),
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -257,13 +304,25 @@ class ApiService {
           'success': true,
           'equipo': Equipo.fromJson(data['data']),
         };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'message': 'No autorizado. Inicia sesión como administrador.',
+        };
+      } else if (response.statusCode == 403) {
+        return {
+          'success': false,
+          'message': 'Acceso denegado. Se requieren permisos de administrador.',
+        };
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Error al actualizar equipo',
+          'message': data['message'] ??
+              'Error al actualizar equipo (${response.statusCode})',
         };
       }
     } catch (e) {
+      print('Error actualizando equipo: $e');
       return {
         'success': false,
         'message': 'Error de conexión: $e',
