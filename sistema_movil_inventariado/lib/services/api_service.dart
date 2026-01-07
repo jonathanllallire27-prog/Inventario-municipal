@@ -118,7 +118,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Error obteniendo equipos: $e');
+      // debugPrint('Error obteniendo equipos: $e');
       return [];
     }
   }
@@ -156,7 +156,7 @@ class ApiService {
         'malo': 0
       };
     } catch (e) {
-      print('Error obteniendo estadísticas: $e');
+      // debugPrint('Error obteniendo estadísticas: $e');
       return {
         'total': 0,
         'pc': 0,
@@ -185,7 +185,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Error obteniendo oficinas: $e');
+      // debugPrint('Error obteniendo oficinas: $e');
       return [];
     }
   }
@@ -206,7 +206,7 @@ class ApiService {
       }
       return '1';
     } catch (e) {
-      print('Error obteniendo siguiente número: $e');
+      // debugPrint('Error obteniendo siguiente número: $e');
       return '1';
     }
   }
@@ -227,7 +227,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Error obteniendo equipo: $e');
+      // debugPrint('Error obteniendo equipo: $e');
       return null;
     }
   }
@@ -235,9 +235,9 @@ class ApiService {
   /// Crear nuevo equipo
   Future<Map<String, dynamic>> crearEquipo(Equipo equipo) async {
     try {
-      print('Creando nuevo equipo');
-      print('Token: ${_token != null ? "presente" : "ausente"}');
-      print('Datos: ${jsonEncode(equipo.toJson())}');
+      // debugPrint('Creando nuevo equipo');
+      // debugPrint('Token: ${_token != null ? "presente" : "ausente"}');
+      // debugPrint('Datos: ${jsonEncode(equipo.toJson())}');
 
       final response = await http.post(
         Uri.parse('$baseUrl/equipos'),
@@ -245,8 +245,8 @@ class ApiService {
         body: jsonEncode(equipo.toJson()),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      // debugPrint('Response status: ${response.statusCode}');
+      // debugPrint('Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -273,7 +273,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      print('Error creando equipo: $e');
+      // debugPrint('Error creando equipo: $e');
       return {
         'success': false,
         'message': 'Error de conexión: $e',
@@ -284,9 +284,9 @@ class ApiService {
   /// Actualizar equipo
   Future<Map<String, dynamic>> actualizarEquipo(int id, Equipo equipo) async {
     try {
-      print('Actualizando equipo ID: $id');
-      print('Token: ${_token != null ? "presente" : "ausente"}');
-      print('Datos: ${jsonEncode(equipo.toJson())}');
+      // debugPrint('Actualizando equipo ID: $id');
+      // debugPrint('Token: ${_token != null ? "presente" : "ausente"}');
+      // debugPrint('Datos: ${jsonEncode(equipo.toJson())}');
 
       final response = await http.put(
         Uri.parse('$baseUrl/equipos/$id'),
@@ -294,8 +294,8 @@ class ApiService {
         body: jsonEncode(equipo.toJson()),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      // debugPrint('Response status: ${response.statusCode}');
+      // debugPrint('Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
@@ -322,7 +322,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      print('Error actualizando equipo: $e');
+      // debugPrint('Error actualizando equipo: $e');
       return {
         'success': false,
         'message': 'Error de conexión: $e',

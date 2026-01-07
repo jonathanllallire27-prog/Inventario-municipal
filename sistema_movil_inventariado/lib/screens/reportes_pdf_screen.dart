@@ -192,7 +192,7 @@ class _ReportesPdfScreenState extends State<ReportesPdfScreen> {
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.arrow_back_rounded, color: Colors.white),
@@ -221,7 +221,7 @@ class _ReportesPdfScreenState extends State<ReportesPdfScreen> {
                   height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
               ),
@@ -233,7 +233,7 @@ class _ReportesPdfScreenState extends State<ReportesPdfScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(
@@ -293,7 +293,7 @@ class _ReportesPdfScreenState extends State<ReportesPdfScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withOpacity(0.1),
+                  color: AppTheme.accentBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -584,12 +584,15 @@ class _ReportesPdfScreenState extends State<ReportesPdfScreen> {
 
       // Construir filtros aplicados
       List<String> filtrosAplicados = [];
-      if (_selectedOficina != 'Todas')
+      if (_selectedOficina != 'Todas') {
         filtrosAplicados.add('Oficina: $_selectedOficina');
-      if (_selectedTipo != 'Todos')
+      }
+      if (_selectedTipo != 'Todos') {
         filtrosAplicados.add('Tipo: $_selectedTipo');
-      if (_selectedEstado != 'Todos')
+      }
+      if (_selectedEstado != 'Todos') {
         filtrosAplicados.add('Estado: $_selectedEstado');
+      }
       String filtrosTexto = filtrosAplicados.isEmpty
           ? 'Sin filtros'
           : filtrosAplicados.join(' | ');
